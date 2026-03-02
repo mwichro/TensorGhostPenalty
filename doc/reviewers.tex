@@ -1,0 +1,644 @@
+\documentclass[11pt, a4paper]{article}
+
+\usepackage[margin=1in]{geometry}
+\usepackage{amsmath}
+\usepackage{amssymb}
+\usepackage{xcolor}
+\usepackage{enumitem}
+\usepackage{url}
+\usepackage{bm}
+
+% --- Custom commands and environments ---
+% Use this command for reviewer headings
+\newcommand{\reviewer}[1]{\subsection*{#1}}
+
+% Use this environment for your answers.
+% You can easily change the style of all your answers by modifying this definition.
+% For example, to remove the color, just delete the \color{...} line.
+\newenvironment{answer}{%
+      \begin{quote}%
+            \color{blue!80!black}%
+            \textbf{Answer:}%
+            % Add your response here.
+            }{%
+      \end{quote}%
+}
+
+% Use this environment for your private notes.
+% To hide all notes, comment the definition below and uncomment the alternative.
+\newenvironment{notes}{%
+      \begin{quote}%
+            \color{gray}%
+            \textbf{Notes:}%
+            % Add your notes here.
+            }{%
+      \end{quote}%
+}
+
+% Mark changes/additions by the AI assistant
+\newcommand{\chadded}[1]{\textcolor{blue!70!black}{\textbf{(chadded:}~#1\textbf{)}}}
+
+% Alternative definition to hide all notes:
+% \newsavebox{\hidenotes}
+% \newenvironment{notes}
+%   {\begin{lrbox}{\hidenotes}}
+%   {\end{lrbox}}
+% --- End of custom commands ---
+
+\begin{document}
+\title{Efficient Matrix-Free Implementation of Ghost Penalty Stabilization in Cut Finite Element Methods}
+
+\section*{Response to the reviewers}
+I would like to thank the editor and the reviewers for their constructive comments and suggestions, which have helped
+me to improve the manuscript. I have revised the manuscript accordingly and provide a point-by-point response to the
+reviewers' comments below.
+
+I am happy to say that the most of the presented methods  are already included in 9.7 release of deal.II, the paper is
+now cited in the manuscript.
+
+I removed the section containing convergence results from the manuscript. Figure~1 was corrected to include one
+previously missing ghost‑penalty face.
+Previous versions of the manuscript contained a more detailed discussion of the convergence properties of the proposed
+method, this has been removed as it was redundant with prior work.
+The styles of all plots have been improved for clarity and consistency.
+Two plots were combined into one figure with subfigures (Figure 6 in the current version of the manuscript).
+Bibliographic entries were fixed and new citations to the Shifted Boundary Method were added to better situate the
+present work within related approaches.
+
+\section*{Editor's and Reviewers' comments}
+
+\reviewer{Reviewer \#1}
+
+This paper proposes an efficient matrix-free implementation of ghost penalty stabilization within the Cut Finite
+Element Method. The author explores the tensor-product structure of basis functions, which enables the simplification
+of evaluating ghost penalties to 1D matrix-vector products. The implementation targets high-order finite element
+methods and is based on the deal.II library. I recommend publishing the article after incorporating some minor updates
+(see the comments below) to enhance the presentation.
+
+\begin{enumerate}[label=\textbullet]
+      \item Abstract would benefit from providing more details on the necessity of the presented work.
+            \begin{answer}
+                  Added a sentence in the abstract.
+            \end{answer}
+
+      \item "For simplicity of presentation, we consider a 3D case with a hexahedral element; however, the reasoning
+            can be easily transferred to the 2D case with quadrilateral elements." Isn't it for generality rather than
+            simplicity?
+            \begin{answer}
+                  The idea is that it avoids writing products over dimensions, and the 3D is a specific case and not
+                  fully general. Hence, I believe simplicity is the right word here.
+            \end{answer}
+
+      \item Section 2.4: The derivation relies on the fact that the cells are aligned with the coordinate axes.
+            Please, emphasise it in the text and the abstract.
+            \begin{answer}
+                  Done.
+            \end{answer}
+
+      \item Examples: Are the cut-integration rules precomputed, or are they computed on the fly? Is it possible to
+            compare the time required for precomputing them versus computing on the fly?
+            \begin{answer}
+                  I have clarified that the
+                  cut-integration rules are precomputed and stored, and that this breaks the tensor product
+                  structure.
+
+                  The on-the-fly computation of these rules is computationally expensive, and the underlying algorithms
+                  often involve significant branching, which is not compatible with SIMD. Since the amount of data
+                  produced (quadrature point locations and weights) is manageable, pre-computing and storing these
+                  rules is a more efficient strategy.
+            \end{answer}
+\end{enumerate}
+
+\reviewer{Reviewer \#2}
+
+The manuscript presents an efficient implementation of ghost-penalty stabilization for CutFEM discretizations. It
+relies on matrix-free operator evaluation for the physical PDE terms, Nitsche's method for homoegeneous Dirichlet
+boundary conditions, and a Kronecker form of ghost penalty stabilization specific to Cartesian mesh elements. The
+manuscript describes the underlying mathematical concepts, explains an efficient implement, presents a test of
+verification and evaluates the performance on various scenarios in 2D and 3D, with the main focus on 3D.
+
+The manuscript covers an important topic, because unfitted finite element methods have been known to offer many
+advantages for certain applications, such as simplified meshing in context of complex geometries or moving domains, but
+the efficient implementation has been lagging, especially for higher orders and in 3D. The chosen ingredients are
+state-of-the-art and based on the widely used deal.II finite element library, providing a credible software
+environment. The obtained results are also very encouraging. At the same time, many of the concepts, software
+ingredients and evaluation steps have been presented in a previous publication by Bergbauer et al. (arXiv preprint from
+April 2024, published online in SISC in May 2025, \url{https://doi.org/10.1137/24M1653689} ). Given the similar scope
+and timing, I suggest to clearly elaborate on the novelty of the present work. I believe that the Kronecker expression
+of the ghost penalty term is worth to be published and evaluated, but I also believe that the manuscript should
+concentrate on that part primarily, rather than repeat what has been said before. Furthermore, the manuscript is not
+prepared very carefully, making several parts losely connected, jumping around between different lines of reasoning,
+containing many avoidable errors and similar deficiencies that make reading very difficult. Below, I provide a long
+list of comments, some bigger in scope, some just minor remarks, that should be addressed before I can consider
+recommending the manuscript for publication. Also I suggest to carefully read everything again, because I could have
+missed errors or imprecise statements. But the main goal of a revision should be to:
+\begin{itemize}
+      \item[a)] make sure to point out the novelty against the contribution [3], and
+      \item[b)] perform experiments to assess the performance of the proposed method side-by-side against the published
+            software implementation of [3], to evaluate the novel parts of the contribution.
+\end{itemize}
+
+\begin{answer}
+      Thank you for the detailed feedback and the opportunity to clarify the contributions of our work. I have revised
+      the manuscript to more clearly distinguish our contributions from those in [3].
+\end{answer}
+
+Ideally, the benchmark and proposed code could be made open-source, or possibly even integrated into the deal.II finite
+element library. This could further contribute to verification and software sustainability, but I do not see it as an
+absolute requirement.
+\begin{answer}
+      Parts of the code has already been integrated into deal.II, specifically assembly of the 1D ghost penalty
+      stabilization
+      term and numbering of DoFs on two adjacent cells. See PR18413 (numbering)
+      PR18361 (1D matrices and Kronecker product for classical assembly), PR18061 (additional ghost cell in
+      matrix-free).
+      The efficient implementation of Kronecker product is available in deal.II for a long time as a part of
+      matrix-free framework.
+
+      There is also a PR18746 that updated the step-85 tutorial, however it was decided that the new way of applying
+      ghost penalty stabilization should be presented as a possible extension to keep the simplicity. The results
+      presented in this PR confirm the correctness of the implementation.
+\end{answer}
+
+\bigskip
+\noindent\textbf{List of comments:}
+
+\begin{enumerate}[label=\textbullet, wide, labelindent=0pt]
+      \item p1 first paragraph: "when elements are small cuts" and "very small subdomains" not phrased accurately.
+            \begin{answer}
+                  Clarified the phrasing.
+            \end{answer}
+
+      \item p1, 2nd paragraph: The statement "The implementation of the ghost penalty is somewhat vexing because it
+            involves evaluation of high-order derivatives." is not entirely correct because high-order derivatives are
+            not the only
+            possible choice. One can use volume-based ghost penalty methods (later referenced on page 2) that are based
+            on the L2
+            projection on patches, which was to the best of my knowledge initially described in Sec. 4 of Burman, 2010
+            (Ref [4] in
+            the manuscript), see also later uses in J. Preuss, 2018 (Ref [33]) or Bergbauer et al., SISC, 2025 (Ref
+                  [3]). Regarding
+            the text later on page 2, paragraph 4, where it is stated that macro-patch stabilization may lead to
+            locking: The end
+            result of that stabilization approach is roughly equivalent to the face-based derivatives in that
+            polynomial spaces of
+            adjacent elements get linked, so the locking part should apply to most ghost penalty approaches, including
+            the one in
+            the manuscript, in my opinion. In fact, Ref [2] that discusses the issue of locking attributes a more
+            strict limit to
+            face-based ghost penaly than to the volume-based (called bulk-GP in that work), see their Sec 4.3, and Sec.
+            2.5 of Ref
+                  [8] (Burman at al.). The crucial part is not bulk or face derivative coupling, but the definition of
+            patches. Note that
+            the selected approach visualized in Fig 1 chooses coupling between all faces, so it is susceptible to
+            locking in the
+            sense of [2, 8]. This topic should be clarified and more appropriate context given. Besides the erroneous
+            classification of face-based and bulk-based stabilization with respect to locking, it is probably also not
+            crucial to
+            be locking-free for the present work because a fixed parameter is used, rather than going towards infinity.
+            \begin{answer}
+                  We now acknowledge volume-based alternatives, clarify that face-based methods (including our own) can
+                  also be susceptible to locking, and note that the patch definition is the crucial factor, citing the
+                  recommended
+                  literature.
+            \end{answer}
+
+      \item p1, 2nd paragraph: This paragraph discusses how to express the ghost penalty operator as a Kronecker
+            product (which, to the best of my knowledge, has not been done before), but overall the efficient
+            evaluation
+            was
+            investigated in detail in a previous publication [3]. While there is a small remark comparing to [3] on
+            page
+            2,
+            paragraph 2, in my opinion the present work should be contrasted against that contribution, identify
+            analogies and
+            differences to give the reader a clear picture of the respective metrics, see also the general comment
+            above.
+            \begin{answer}
+                  The paragraph has been expanded to better contrast with [3].
+            \end{answer}
+
+      \item p2, 2nd paragraph, 1st line: There are two references to ref [1].
+            \begin{answer}
+                  Corrected.
+            \end{answer}
+
+      \item p2, paragraph on TraceFEM: Is this crucial for the manuscript and is it used later on that I just missed?
+            If not, I suggest to shorten this part as it might be confusing to the reader when talking about a
+            different
+            topic.
+            \begin{answer}
+                  Paragraph shortened to a single sentence, moved at the end of paragraph starting with "Ghost penalty
+                  methods..."
+            \end{answer}
+
+      \item p2, 4th paragraph: The text states "Larson et al. [28]" but there are only two authors in [28], Larson
+            and Zahedi, where the common citation style would be "Larson and Zahedi [28]". In general, the citation
+            style
+            of
+            literature results could be made more uniform throughout the manuscript. Let me mention one single
+            additional
+            problem,
+            besides several more that could be listed: the citation of [35] mis-spells the first author name (Sch\"oder
+            vs the
+            spelling Schoeder in the reference list, the latter is also the one I find online), and does not use Stokes
+            but
+            acoustics according to the paper title.
+            \begin{answer}
+                  Done.  I have also corrected other citations. The bibtex compilation was failing and some entries
+                  authors were replaced with ----, this is also fixed.
+            \end{answer}
+
+      \item p2, last paragraph: The text on matrix-free methods is more or less a repetition of the first paragraph
+            on the same page. Those should be merged in a single place.
+            \begin{answer}
+                  Merged the two paragraphs into one.
+            \end{answer}
+
+      \item p4, definition of Nitsche penalty \(\gamma_D = 30 k (k+1)\): How is the factor 30 derived? In general,
+            one would use a 1/h scaling here to ensure coercivity, see, e.g., Warburton and Hesthaven, "On the
+            constants
+            in
+            hp-ﬁnite element trace inverse inequalities", CMAME 192, 2003 (doi:10.1016/S0045-7825(03)00294-9), and
+            related work on
+            trace estimates. Please clarify the choice and to which extent this is robust for any mesh size h.
+            \begin{answer}
+                  Done. The missing part was 1/h scaling to the Nitsche penalty term in the weak form and in
+                  the algorithm description.
+
+                  I was experimenting with some preconditioning strategies and 30 behaved
+                  well for patch smoothing. It does not affect the results presented in the manuscript, but for the
+                  sake of completeness I included it.
+
+                  The paper by Warburton and Hesthaven is now cited.
+            \end{answer}
+
+      \item p5, Sec 2.4: The initial text mentions \(\xi\) as the reference coordinate, whereas the two first
+            formulas in this text use the coordinate \(x_i\). This is confusing. I suggest to clarify the notation in
+            terms of
+            reference coordinates and physical coordinates and make sure to be consistent.
+            \begin{answer}
+                  Done. I have changed \(\xi\) to \(x_1\) in the said formula.
+            \end{answer}
+
+      \item p5, text describing Fig 2: This is a 2D figure, but the text around it talks about 3D being the case
+            discussed. This should be clarified and made uniform.
+            \begin{answer}
+                  Done. I have added a sentence to the caption of Figure 2.
+            \end{answer}
+
+      \item p6, equation (1): The bilinear form \( ( , )_F \) represents an integral over a face F in the first and
+            second line. However, the third line starts factoring out some expressions, but the integration domain
+            still
+            remains F
+            on each constituent. While it is intuitively clear what happens, the notation does not quite match; this
+            should be
+            corrected, e.g. by stating the underlying integrals.
+            \begin{answer}
+                  Changed the intergration, use $F^1$ to denote the face in reference coordinates. Face $F$ was already
+                  described as a product of 1D sets.
+            \end{answer}
+
+      \item p6, paragraph before formula (3): Isn't the size of the ghost penaly matrix (2k+1)x(2k+1), rather than
+            (2k-1)? See also many other places in the text.
+            \begin{answer}
+                  Done. The size of the ghost penalty matrix is now stated as
+                  $(2k+1) \times (2k+1)$.
+            \end{answer}
+
+      \item p7, formula after Eq. (4): Isn't the mass matrix scaled by h rather than \(h^{-1}\), because the factor
+            arises from the change of size of the integration domain (0,1) in reference coordinates to an interval of
+            length h in
+            real coordinates? Please check and make sure to present the correct formula, see also the use of formula
+            (5).
+            \begin{answer} Corrected. Eq (5) was correct.
+            \end{answer}
+
+      \item p7, text immediately after (5): "We store the matrices precomputed mass matrix h M\textasciicircum1 and
+            the penalty matrix" is not grammatically correct.
+            \begin{answer}
+                  Done. The sentence has been corrected.
+            \end{answer}
+
+      \item p8, 1st paragraph: The text "The second step applies the mass matrix M h in the direction orthogonal to
+            the face, and the third step applies the mass matrix in the direction parallel to the face." does not
+            appear
+            correct,
+            as both mass matrices arise from the tangential space on the face, whereas the ghost penalty matrix is the
+            one aligned
+            with the face.
+            \begin{answer}
+                  The description of the mass matrix application has been corrected
+            \end{answer}
+
+      \item p8, 1st paragraph, complexity: Since k is not very large in the examples shown later (with k=1,2,3
+            evaluated; only Fig 4 has some general scaling to higher k), the constants in front of the big-O notation
+            should be
+            given as well, or other arguments in how the approach differs from [3], for example.
+            \begin{answer}
+                  Done. I have replaced the big O notation with the explicit formula for the computational
+                  cost.
+            \end{answer}
+
+      \item p8, Sec 2.5.2: I do not really understand the 2nd part in the enumerated list, "Quadrature loop: Queue
+            \(\nabla u_q\) for integration." - shouldn't this also involve the test function, Jacobian determinant and
+            quadrature
+            weight? I see a similar presentation in Algorithm 1. Also, it is not really clear how the summation of the
+            gradient of
+            test function with index i is treated in steps 2 or 3. I believe I see how it would get implemented in a
+            code, but the
+            presentation in the text should be improved. The same holds for formulas (12)-(14) and their relation to
+            the
+            text.
+            Furthermore, in Algorithm 1, line 22, not just the queued gradients but also queued values should be
+            integrated. Here,
+            the imprecise notation gets particularly striking, because the part that gets queued is not the value or
+            gradient on
+            its own, but the content to be multiplied by the value or gradient of the test function!
+            \begin{answer}
+                  Jacobian determinant, quadrature weight, and test function are applied during the
+                  integration
+                  step.
+                  While Jacobian determinant and quadrature weight are just scaling factors, multiplication by test
+                  function is done via sum factorization.
+
+                  The text has been clarified to explain the evaluation and integration steps.
+            \end{answer}
+
+      \item Regarding Secs 2.5-2.7 and the related parts of the manuscript: These are not new algorithms but follow
+            previous works closely. Besides the references already given on matrix-free evaluation with sum
+            factorization, it would
+            be good to also list some classical textbook on spectral element methods, such as Deville, Fischer and Mund
+            (2002) or
+            Kopriva (2009). Furthermore, elaborate on what is new.
+            \begin{answer}
+                  Added citations to the recommended literature and clarified that the treatment of interior cells
+                  follows the standard matrix-free approach.
+            \end{answer}
+
+      \item p8, bottom: The sentence "Note the the cost the cell evaluation grows in the same rate as the cost of
+            evalution of the ghost penalty," appears to be either using the wrong punctuation or be incomplete, and it
+            contains
+            errors.
+            \begin{answer}
+                  Corrected.
+            \end{answer}
+
+      \item p9, itemized list at top of page: Here, the symbol J is mentioned to denote the Jacobian matrices, but
+            earlier formulas use J for the determinant of the Jacobian. Use a consistent notation. Also, for formula
+            (16)
+            the
+            common notation would be to use \(J^{-T}\) (inverse Jacobian, transposed), but of course this depends on
+            how
+            exactly
+            the rows and columns of the Jacobian matrix are defined. This should be clarified as well. (Note that the
+            mesh cells
+            are Cartesian, so the implementation is correct also without transposition, but it is not good style to
+            confuse
+            readers.)
+            \begin{answer}
+                  Changed the notation to bold $\bm{J}$ for the Jacobian matrix and non-bold $J$ for its determinant.
+                  Changed the formula to use \(\bm{J}^{-T}\).
+            \end{answer}
+
+      \item p9, numbered list on the lower part of the page: I am not convinced by the order of the steps. It seems
+            as if steps 1 and 3 belong together and steps 2 and 4 belong together, which makes it unclear as to why
+            they
+            are not
+            ordered appropriately. In any case, these are also not three steps as claimed at the top of the list. This
+            should be
+            clarified or fixed. In any case, I believe all of Sec 2.6 is done in the same way as in Ref [3].
+            \begin{answer}
+                  From mathematical point of view that is correct, but from implementation point of view I do it this
+                  way because this allows us to read DoFs of a cell only once and then directly use them to compute all
+                  quantities needed
+                  for the cell and associated immersed boundary. The memory used for fetching DoFs is used then to
+                  accumulate the results of integration.
+
+                  This has been clarified in the text.
+            \end{answer}
+
+      \item p9: Regarding the integration on cut cells / faces, it should be clarified whether some tensor product
+            structure is used, and if this affects the complexity estimates I mentioned above. Note that the text at
+            the
+            bottom of
+            page 10 indicates a higher complexity, but this should be made more explicit at this place.
+            \begin{answer}
+                  Cut cell integration is not tensor product, this is now clarified in the text.
+            \end{answer}
+
+      \item p10, 2nd paragraph: The text "As we expect this [the matrix-vector product] to be the most
+            computationally intensive part of any matrix-free solver for CutFEM, we aim to utilize the hardware as
+            efficiently as
+            possible." might be misleading. In a matrix-free context, the most challenging part is usually to find
+            efficient
+            preconditioners, in particular to find preconditioners that have similar cost as the (excellent) algorithms
+            derived by
+            present contribution.
+            \begin{answer}
+                  - Rephrased the sentence to be more precise.
+
+                  - Added citation to patch smoothing.
+            \end{answer}
+
+      \item p10, 5th paragraph: The text "The impact of this imbalance is limited as the number of faces with ghost
+            penalty is small compared to the total number of cells" is misleading without context, because in 3D the
+            number of
+            faces is not that low (think about the 25 sphere case), and what matters is the computational cost of the
+            face penalty
+            matrices compared to the other ingredients in the algorithm and the memory access.
+            \begin{answer}
+                  Rephrased.
+            \end{answer}
+
+      \item p10, 6th paragraph: This starts with "Finally the ghost penalty operator is applied to the faces." but
+            this is already what gets discussed in the previous paragraph. The text should be made concise, group one
+            line of
+            argument into the same paragraph instead of jumping back and forth, and avoid repetition.
+            \begin{answer}
+                  Done, the order of the paragraphs has been changed.
+                  The repetition has been removed.
+            \end{answer}
+
+      \item p10, last paragraph: The description of load balancing belongs to the MPI parallelization in my opinion
+            (4th paragraph). This is confusing.
+            \begin{answer}
+                  Done. Text in that entire subsection was be restructured.
+            \end{answer}
+
+      \item p12, 1st paragraph: Isn't the compile flag "-O3" rather than "O3"?
+            \begin{answer}
+                  Corrected.
+            \end{answer}
+
+      \item p12, 2nd paragraph: "interior of unit sphere" - does this mean the unit ball, or is it a surface problem
+            (2D surface embedded into a 3D space) that gets solved here? In the latter case, how are the details?
+            \begin{answer}
+                  I have changed "interior of the unit sphere" to "unit ball".
+            \end{answer}
+
+      \item p12, Sec 3.1: This convergence test is very similar to what many works on CutFEM have done before.
+            \begin{answer}
+                  I agree that section was indeed redundant and has been removed.
+
+                  The goal was to illustrate the correctness of the implementation, but since the kronecker evaluation
+                  of the ghost penalty operator will become a test inside deal.II (Implementation form PR18746 will be
+                  moved to tests) this is not needed.
+            \end{answer}
+
+      \item p13: Ref [3] appears to have the experimental code available as open-source, so a comparison of the
+            actual code in a side-by-side experiment should be made (in the SISC publication of [3] I found the
+            reference
+            \url{https://github.com/bergbauer/fe_point_evaluation_benchmarks} ). Furthermore, it is crucial to explain
+            how the
+            experiments shown in this section are similar or differ from the benchmarks in earlier work. As they are
+            done
+            right
+            now, several pieces of information feel a bit repetitive.
+            \begin{answer}
+                  I was not aware of this repo.
+
+                  However in this repo ghost penalty is not implemented.
+                  FEEvaluation and  FEPointEvaluation are exactly the classes used in [3] so the comparison was already
+                  done, just the description was inaccurate.
+
+                  The micro-benchmarks in the paper are done in a way that emphasizes the number of floating point
+                  operations and the memory accesses should not interfere.
+
+                  The benchmarked code is the same. I just add ghost penalty on top of it.
+            \end{answer}
+      \item p13: The text first introduces unknown names "FEEvaluation" or "FEPointEvaluation", and some
+            abbreviations "FEEval" and "FEPointEval" in the figures; later, it is explained that those come from
+            deal.II.
+            The text
+            should be made more clear to not have the reader guess first where the name come from, go around in the
+            previous
+            sections of the text, only to find out a few sentences later where they come from. (It might be just me
+            reading the
+            text piece by piece and wondering before I go on with reading, but this could be seen as a remark to work
+            on
+            the
+            organization of the information.)
+            \begin{answer}
+                  Done. I have clarified the text and used \texttt{texttt} for the class names.
+            \end{answer}
+
+      \item p13, experiment to illustrate relative timings: I do not understand the experiment in its entirety. The
+            "reference" time lists 0.077 us, which is less than a single miss to main memory on modern CPUs. There is
+            some vague
+            statements above performing SIMD vectorized work with a magic number of "8" that is used as a division
+            factor
+            (albeit
+            the listed CPU of AMD appears to not support 512-bit vectorization; maybe this is a single precision
+            experiment or an
+            experiment with many elements?). Furthermore, I am puzzled whether typical timers on CPUs can provide
+            sub-microsecond
+            resolution, because the timing would interfere with out-of-order execution and similar features within the
+            CPU. Is this
+            experiment repeated several times to get reliable numbers? Are there statistical deviations to take into
+            account? It
+            might be good to read the text on "Scientific Benchmarking of Parallel Computing Systems" by Hoefler and
+            Belli, 2015,
+            \url{https://doi.org/10.1145/2807591.2807644} , for the state-of-the-art concerning timing results.
+            \begin{answer}
+                  I fully agree with this comment, the experiment was planned to avoid those issues, however the
+                  detailed
+                  description was not provided in the paper.
+
+                  The experiment is indeed repeated many
+                  times to get reliable numbers, the total time is measured over all repetitions, the reported values
+                  are averages. I have clarified the text regarding the experimental setup.
+
+                  The experiment is done in double precision and indeed vectorization is done with AVX2 (256 bit).
+
+                  I looked into the referenced text, it is indeed useful, I added a citation.
+
+                  This is now corrected in the text and the plots are adjusted accordingly.
+            \end{answer}
+
+      \item p13/14: It seems as if the experiment of Fig 4 (relative timings) is a sequential one, whereas the
+            matrix-vector multiplications (vmult) of Figs 5 and 6 are done in parallel. The experimental setup of the
+            tests should
+            be made more clear, the generic text at the beginning of Sec 3 does get blurried by the experiment of Fig
+            4.
+            It might
+            make sense to split up that part into a different subsection.
+            \begin{answer}
+                  This benchmark is indeed in a sequential setting, in contrast to the parallel benchmarks in Figures
+                  5 and 6. The purpose of this specific experiment is to measure the performance of the individual
+                  components of the
+                  matrix-vector product in isolation, making it a compute-bound micro-benchmark. The goal of Figure 4
+                  is to illustrate
+                  the computational complexity of the different components and to verify the theoretical complexity
+                  estimates discussed
+                  earlier.
+                  It is now clarified in the text.
+            \end{answer}
+
+      \item p13: The metrics of DoFs/second is not clearly defined. The text on page 13 talks about "average time per
+            degree of freedom", but the figures show the reciprocal (DoFs/s). Also, it is not clear whether DoFs
+            outside
+            the domain
+            but part of the fictious domain are counted as well, or whether those parts do not carry any degrees of
+            freedom. Does
+            the code handle this setting in an efficient way? This should be clarify, especially for the 25-ball case
+            later in the
+            subsection.
+            \begin{answer}
+                  The metric is indeed DoFs/s, I have corrected the text accordingly.
+
+                  The DoFs outside the domain are not counted, the text has been clarified to explain this.
+            \end{answer}
+
+      \item p14, 2nd paragraph: "For a fixed 3D mesh consisting of obtained by refining a single cell 5 times" - this
+            is strange grammatically and also from the actual mesh I do not get the point. Is the "5" the number of
+            uniform
+            refinement steps, doubling the number of elements per direction in each step, or is it adaptive refinement?
+            If adaptive
+            meshes get used, please explain are they treated with ghost penalties and the resulting differences in mesh
+            sizes (and
+            hanging nodes).
+            \begin{answer}
+                  Done. I have added a sentence to clarify the timing breakdown.
+            \end{answer}
+
+      \item p15/16: The timing breakdown for the experiment (Fig 9) should be made more clear: Does the "MPI" time
+            include possible load imbalances? How are the timings distributed over the 32 MPI ranks (and is "32" the
+            right number
+            for the experiment)? Is the timing recorded for the cut cells, which is shown to dominate, explained by the
+            low-level
+            experiment of Fig 4? And in turn, can the recorded timings be explained by the computational complexities,
+            or
+            are there
+            hidden factors? More precise numbers and relations between the experiments should be given to make the
+            results
+            understandable for the reader and create an added value compared to previous works.
+            \begin{answer}
+                  - MPI time includes load imbalance, yes.
+
+                  - 32 is the number of MPI ranks for the experiment.
+
+                  - The timings are summed up over all MPI ranks, so MPI time includes the time wasted due to load
+                  imbalance.
+
+                  - The timing recorded for the cut cells is indeed explained by the low-level experiment of Fig 4
+
+                  The text has been clarified to explain those points and relate the experiments from Fig 4 and Fig 8.
+            \end{answer}
+
+      \item p16, conclusions: The text compares against sparse matrices, which is ok, but it does not mention that
+            previous works have obtained similar complexity/cost benefits (Ref [3]), and that convergence
+            rates/flexibility of
+            CutFEM as a concept are simply reproducing the work by Burman, Larson and many co-workers.
+            \begin{answer}
+                  Conclusions was rewritten to clarify the novelty of the present work.
+            \end{answer}
+
+      \item General appearance: Some equations are numbered in tight sequence (e.g., (7)-(9)), whereas others are
+            not. I suggest to either number all equations, or to number only those that the text refers to.
+            \begin{answer}
+                  All equations are now numbered.
+            \end{answer}
+\end{enumerate}
+
+\end{document}

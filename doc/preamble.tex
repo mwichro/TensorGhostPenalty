@@ -1,0 +1,197 @@
+
+\usepackage{amstext}
+\usepackage{stmaryrd}
+%\usepackage{listings}
+%\lstset{language=C++}
+%\usepackage[boxed]{algorithm2e}
+\usepackage{algpseudocode}
+
+\usepackage[normalem]{ulem}
+\usepackage{graphicx}
+
+%\usepackage{authblk}
+%\usepackage{xcolor}
+\usepackage{array}
+\usepackage{verbatim}
+\usepackage{booktabs}
+\usepackage{calc}
+\usepackage{textcomp}
+\usepackage{multirow}
+%\usepackage[boxed]{algorithm2e}
+
+\usepackage[all]{xy}
+
+\usepackage{cancel}
+\usepackage{mathtools}
+\usepackage{placeins}
+\usepackage{xspace}
+
+%\input{packages}
+
+\usepackage{tikz,tikzscale}
+\usetikzlibrary{calc}
+\usetikzlibrary{shadings}
+% \usepackage[backend=biber,style=alphabetic]{biblatex}
+%\addbibresource{literature.bib}
+
+%%%%%%%%%% Packages to help editing %%%%%%%%%%
+%\usepackage[notref,notcite]{showkeys} % Show labels.
+\usepackage[mode=multiuser,status=draft]{fixme} % Provide note, warning, error, fatal.
+%\fxsetup{layout=inline}%pdfcsignote}
+\fxsetup{envlayout=color}
+\fxsetup{innerlayout=inline}
+\fxsetup{targetlayout=colorcb}
+\FXProvidesTargetLayout{color}
+
+\fxusetheme{color}
+\FXRegisterAuthor{ss}{envss}{SS}
+\FXRegisterAuthor{mr}{envmr}{MR}
+\FXRegisterAuthor{mw}{envmw}{MW}
+\FXRegisterAuthor{mk}{envmk}{MK}
+
+\usepackage{subcaption}
+\usepackage[format=plain,indention=.5cm]{caption}
+\usepackage{pgfplots}
+
+\begin{comment}
+
+\DontPrintSemicolon
+\SetKwComment{Comment}{$\triangleleft$ }{}
+\SetKwProg{Fn}{Function}{}{end}
+
+\providecommand{\keywords}[1]
+{
+    \small
+    \textbf{\textit{Keywords:}} #1
+}
+\end{comment}
+% \newcommand{\FigureSubst}[1]{ \fbox{ 
+% \begin{minipage} {0.7\textwidth} #1  
+% \end{minipage}  }   }
+
+\def\mesh{\mathbb M}
+\def\cell{K}
+\def\R{\mathbb R}
+\def\ncol{N_{\text{colors}}}
+\def\rest#1{I_{#1}^\downarrow}
+\def\prol#1{I_{#1}^\uparrow}
+
+\newcommand{\pluseq}{\stackrel{+}{\gets}}
+%\newcommand{\pluseq}{\stackbin{+}{=}}
+
+\newcommand{\Dd}{\text{d}}
+
+% Mohsen's setting and definitions
+%###################################%
+\usepackage{bm,upgreek}
+\newcommand\rd{{\rm{d}}}
+\newcommand{\bfm}[1]{{\rm\bf #1}}
+
+\newcommand{\greentext}[1]{{\color{darkgreen} #1}}
+\newcommand{\bluetext}[1]{{\color{blue} #1}}
+\newcommand{\redtext}[1]{{\color{red} #1}}
+
+\DeclareMathOperator{\tr}{tr}
+%###################################%
+
+% MW settings
+%###################################%
+
+%\newcommand{\dlt}{\bm{\delta_{u}}}
+%\newcommand{\corr}{\bm{{v}}}
+
+\newcommand{\dlt}{\bm{v}}
+\newcommand{\corr}{  \,\Delta \bm{u}\, }
+
+\newcommand{\scalar }{\textit{scalar}\xspace}
+\newcommand{\scalarRef}{\textit{scalar ref.}\xspace}
+\newcommand{\tensorS}{\textit{tensor4}\xspace}
+\newcommand{\pade}{\textit{Pade log}\xspace}
+\newcommand{\none}{\textit{exact log}\xspace}
+\newcommand{\tensorAD}{\textit{tensorAD}\xspace}
+
+\newcommand{\noneSplit}{\textit{Pade root}\xspace}
+\newcommand{\tensorADsplit}{\textit{tensorAD}\xspace}
+
+\newcommand{\gz}{\mathbf{g}}
+
+\newcommand{\Grad}{\nabla}
+\newcommand{\grad}{\nabla}
+
+\newcommand{\ds}{\,\mathrm{d}s}
+\newcommand{\dx}{\,\mathrm{d}x}
+%###################################%
+%
+
+\usepackage{graphicx} % Required for inserting images
+\usepackage[linesnumbered,vlined,commentsnumbered,ruled]{algorithm2e}
+
+% Avoid LaTeX failures when change-markup writes empty citation entries to the .aux
+% Some change-markup writes
+%    \cite  {}
+% into the auxiliary files which results in an empty \citation{} entry and a
+% BibTeX/LaTeX error on some toolchains. Make the redefinition defensive: only
+% override \citation if it already exists, and ensure some internal citation
+% helpers are defined so expansion in the .aux doesn't trigger undefined
+% control sequence errors during automated builds.
+\makeatletter
+% Ensure internal helper \@citeb exists (some citation styles define it). If
+% missing, provide a harmless empty definition to avoid "Undefined control
+% sequence" when aux files contain constructs referencing it.
+\providecommand\@citeb{}%
+
+% Redefine \citation only if it exists to avoid errors when engines differ.
+\@ifundefined{citation}{%
+    % nothing to do: \citation not present in this format
+}{%
+    \let\orig@citation\citation
+    \def\citation#1{%
+        % Fallback check for an empty argument without relying on \@ifmtarg
+        \def\@tempa{#1}%
+        \ifx\@tempa\@empty
+            % ignore empty citation
+        \else
+        \orig@citation{#1}%
+        \fi
+    }%
+}% \@ifundefined{citation}
+\makeatother
+% Prevent the `changes` package from writing its local-change list to the .aux file
+% (the package writes entries via \@writefile{loc}{...} which can contain
+% \cite commands; those may expand into problematic empty \citation{} entries
+% under some edit flows). Here we intercept writes to the "loc" stream and
+% drop them while leaving other write streams intact.
+\makeatletter
+\let\orig@writefile\@writefile
+\def\@writefile#1#2{%
+    % compare the stream name to "loc"; if it matches, ignore the write
+    \edef\@tempa{#1}%
+    \edef\@tempb{loc}%
+    \ifx\@tempa\@tempb
+        % drop writes to 'loc'
+    \else
+    \orig@writefile{#1}{#2}%
+    \fi
+}
+\makeatother
+
+% \usepackage[commentmarkup,commandnameprefix=always]{changes} % For tracking revisions
+\usepackage[final,commandnameprefix=always]{changes} % For tracking revisions
+
+% Use the 'changes' package commands for revisions:
+% \chadded{new text} - Marks text as added.
+% \chdeleted{old text} - Marks text as deleted.
+% \chreplaced{new text}{old text} - Marks text as replaced.
+
+% horizontal strike-through using ulem (loaded above with [normalem]) 
+\providecommand{\crossout}[1]{\sout{#1}}
+
+% optional: colored strike-through (loads xcolor if not already loaded)
+\usepackage{xcolor}
+\providecommand{\regdel}[1]{\textcolor{blue}{\sout{#1}}}
+
+% To control the display of changes, pass options to the package:
+% \usepackage[final]{changes}    % Shows only the final version (no markup).
+% \usepackage[original]{changes} % Shows only the original version (deleted text, no added text).
+% \usepackage[markup=default]{changes} % Shows all changes with markup (default).
+% \usepackage[commentmarkup]{changes} % Shows changes as comments in the margin.
