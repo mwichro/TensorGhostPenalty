@@ -14,14 +14,14 @@
 
 \begin{abstract}
     We present a matrix-free approach for implementing ghost penalty stabilization in Cut Finite Element Methods
-    (CutFEM). \chadded{While matrix-free methods for CutFEM have been developed, the efficient evaluation of
-        high-order, face-based ghost penalties remains a significant challenge, which this work addresses.} By
+    (CutFEM). While matrix-free methods for CutFEM have been developed, the efficient evaluation of
+    high-order, face-based ghost penalties remains a significant challenge, which this work addresses. By
     exploiting the
     tensor-product structure of the ghost penalty operator, we reduce its evaluation to a
     series of one-dimensional matrix-vector products using precomputed 1D matrices, avoiding the need to evaluate
     high-order derivatives directly. This approach achieves $O(k^{d+1})$ complexity for elements of degree $k$ in $d$
     dimensions, significantly reducing implementation effort while maintaining accuracy.
-    \chadded{The derivation relies on the fact that the cells are aligned with the coordinate axes.}
+    The derivation relies on the fact that the cells are aligned with the coordinate axes.
     The method is implemented within the \texttt{deal.II} library.
 \end{abstract}
 
@@ -32,36 +32,21 @@ Cut finite element methods (CutFEM) have emerged as a versatile approach for sol
 (PDEs) on complex geometries \cite{burman2015cutfem, burman2014fictitious, burman2016full, burman2022cutfem,
     cerroni2019numerical}. These methods allow for the discretization of the domain using a mesh that is independent of the
 geometry, which simplifies mesh generation and enables the simulation of problems with evolving interfaces or moving
-boundaries. However, CutFEM can suffer from ill-conditioning \chreplaced{when the interface intersects elements in a
-    way that creates cut cells with an arbitrarily small volume fraction inside the domain}{when elements are small cuts,
-    i.e., when the interface intersects elements in a way that creates very small subdomains}. This can lead to a poorly
-conditioned system matrix and adversely affect solver performance. To address this challenge, various stabilization
-methods have been developed to ensure mathematical well-posedness regardless of how the geometry intersects with the
+boundaries. However, CutFEM can suffer from ill-conditioning when the interface intersects elements in a way that
+creates cut cells with an arbitrarily small volume fraction inside the domain. This can lead to a poorly conditioned
+system matrix and adversely affect solver performance. To address this challenge, various stabilization methods have
+been developed to ensure mathematical well-posedness regardless of how the geometry intersects with the
 interface~\cite{burman2010ghost, badia2022linking}. A popular choice is to employ a ghost penalty approach to penalize
-jumps in the solution or its derivatives across element faces, providing \chdeleted{crucial} stability especially for
-high-order finite element spaces~\cite{larson2020stabilization, hansbo2017cut, claus2019cutfem}.
+jumps in the solution or its derivatives across element faces, providing stability especially for high-order finite
+element spaces~\cite{larson2020stabilization, hansbo2017cut, claus2019cutfem}.
 
-\chreplaced{While the direct implementation of face-based ghost penalty can be vexing due to the evaluation of
-    high-order derivatives, alternatives such as volume-based methods exist that avoid this
-    issue~\cite{burman2010ghost,
-        preuss2018higher, bergbauer2024high}. However, the face-based approach is particularly amenable to the
-    tensor-product
-    factorization presented in this work. By expressing the ghost penalty term as a sum of Kronecker products of
-    one-dimensional mass and penalty matrices, we can efficiently compute its action on a vector without explicitly
-    assembling the global matrix. This approach is particularly well-suited for high-order finite element methods,
-    where
-    the cost of assembling and storing the global matrix can be prohibitively high.}{The implementation of the ghost
-    penalty is somewhat vexing because it involves evaluation of high-order derivatives.
-    As a remedy for that, we exploit the tensor-product structure of the finite element basis functions to reduce both
-    the
-    computational cost and implementation complexity of the ghost penalty operator. By expressing the ghost penalty
-    term as
-    a sum of Kronecker products of one-dimensional mass and penalty matrices, we can efficiently compute the action of
-    the
-    ghost penalty
-    operator on a vector without explicitly assembling the global matrix. This approach is particularly well-suited for
-    high-order finite element methods, where the cost of assembling and storing the global matrix can be prohibitively
-    high.}
+While the direct implementation of face-based ghost penalty can be vexing due to the evaluation of high-order
+derivatives, alternatives such as volume-based methods exist that avoid this issue~\cite{burman2010ghost,
+    preuss2018higher, bergbauer2024high}. However, the face-based approach is particularly amenable to the tensor-product
+factorization presented in this work. By expressing the ghost penalty term as a sum of Kronecker products of
+one-dimensional mass and penalty matrices, we can efficiently compute its action on a vector without explicitly
+assembling the global matrix. This approach is particularly well-suited for high-order finite element methods, where
+the cost of assembling and storing the global matrix can be prohibitively high.
 
 In traditional finite element methods, constructing and storing the stiffness matrix becomes increasingly expensive as
 the order of the finite element approximation grows. The fill ratio increases rapidly, leading to significant memory
@@ -69,47 +54,30 @@ consumption and data transfer bottlenecks. Matrix-free methods circumvent these 
 the matrix on a vector on-the-fly, offering substantial performance improvements for high-order finite element
 spaces~\cite{kolev2021efficient, kronbichler2012generic, kronbichler2019multigrid, bergbauer2024high}. Recent
 works~\cite{davydov2020algorithms, davydov2020matrix, moxey2020efficient, clevenger2020flexible} have demonstrated the
-effectiveness of matrix-free methods across various finite element
-applications~\chadded{\cite{wichrowski2025finteStrain, wichrowski2023exploiting}}.
+effectiveness of matrix-free methods across various finite element applications~\cite{wichrowski2025finteStrain,
+    wichrowski2023exploiting}.
 
-\chadded{Matrix-free~\cite{kronbichler2012generic} methods have gained popularity in recent years as a way to reduce
-    the
-    computational cost and memory
-    footprint of finite element simulations. These methods avoid the explicit assembly and storage of the stiffness
-    matrix,
-    instead computing the action of the matrix on a vector on-the-fly. This can lead to significant performance
-    improvements~\cite{fischer2020scalability,kronbichler2019fast, kronbichler2019multigrid}, especially for
-    large-scale
-    problems or high-order finite element spaces. The presented method is implemented within the \texttt{deal.II}
-    library
-    \cite{dealii2019design}, building upon its flexible and efficient framework for matrix-free
-    methods~\cite{kronbichler2012generic, kronbichler2019multigrid} and the infrastructure
-    developed by Bergbauer
-    \cite{bergbauer2024high} for cut cells. The implementation of the ghost penalty, however, is novel.}
-\chdeleted{The presented
-    method is implemented within the \texttt{deal.II} library \cite{dealii2019design}, a
-    well-established open-source finite element library that provides a wide range of tools for
-    solving PDEs. \texttt{deal.II} offers a flexible and efficient framework~\cite{kronbichler2012generic} for
-    implementing
-    matrix-free methods, including support for high-order finite element spaces and parallel
-    computing~\cite{kronbichler2019multigrid}. We \chreplaced{build upon}{leverage} the matrix-free infrastructure
-    developed by Bergbauer
-    \cite{bergbauer2024high} to efficiently evaluate the cell contributions of cut cells, while the implementation
-    of the ghost penalty is novel.}
+Matrix-free~\cite{kronbichler2012generic} methods have gained popularity in recent years as a way to reduce the
+computational cost and memory footprint of finite element simulations. These methods avoid the explicit assembly and
+storage of the stiffness matrix, instead computing the action of the matrix on a vector on-the-fly. This can lead to
+significant performance improvements~\cite{fischer2020scalability,kronbichler2019fast, kronbichler2019multigrid},
+especially for large-scale problems or high-order finite element spaces. The presented method is implemented within the
+\texttt{deal.II} library \cite{dealii2019design}, building upon its flexible and efficient framework for matrix-free
+methods~\cite{kronbichler2012generic, kronbichler2019multigrid} and the infrastructure developed by Bergbauer
+\cite{bergbauer2024high} for cut cells. The implementation of the ghost penalty, however, is novel.
 
 Ghost penalty methods~\cite{burman2010ghost} add stabilization terms to the variational formulation of the PDE,
 penalizing jumps in the solution or its derivatives across element faces. Several works have explored the use of ghost
 penalty methods in the context of CutFEM. Burman et al. \cite{burman2015cutfem, burman2014fictitious, burman2016full}
 introduced various forms of the ghost penalty method and established its mathematical foundations, showing that it
-leads to optimal convergence rates independent of how the boundary intersects the mesh. \chreplaced{Larson and
-    Zahedi}{Larson et al.} \cite{larson2020stabilization} analyzed high-order ghost penalty stabilization for CutFEM,
-proving its stability and convergence properties for arbitrary polynomial orders. An alternative for the ghost penalty
-method is using macro-patch stabilization~\cite{gurkan2019stabilized, preuss2018higher}; that avoids evaluation of
-derivatives. \chdeleted{, but may also lead to locking~\cite{badia2022linking}.}\chadded{However, most ghost penalty
-    approaches, including face-based methods like the one in this manuscript, can be susceptible to locking depending on
-    the definition of element patches~\cite{badia2022linking, burman2022design}. } \chadded{Trace Finite Element Method
-    (TraceFEM)~\cite{lehrenfeld2018stabilized, heister2024adaptive, jankuhn2021trace} also relies on stabilization
-    techniques analogous to the ghost penalty for solving PDEs on surfaces~\cite{heister2024adaptive}.}
+leads to optimal convergence rates independent of how the boundary intersects the mesh. Larson and Zahedi
+\cite{larson2020stabilization} analyzed high-order ghost penalty stabilization for CutFEM, proving its stability and
+convergence properties for arbitrary polynomial orders. An alternative for the ghost penalty method is using
+macro-patch stabilization~\cite{gurkan2019stabilized, preuss2018higher}; that avoids evaluation of derivatives.
+However, most ghost penalty approaches, including face-based methods like the one in this manuscript, can be
+susceptible to locking depending on the definition of element patches~\cite{badia2022linking, burman2022design}. Trace
+Finite Element Method (TraceFEM)~\cite{lehrenfeld2018stabilized, heister2024adaptive, jankuhn2021trace} also relies on
+stabilization techniques analogous to the ghost penalty for solving PDEs on surfaces~\cite{heister2024adaptive}.
 
 Badia et al. \cite{badia2022linking} linked strong and weak stabilization methods, discussed ghost penalty locking,
 designed locking-free ghost penalties, and compared stabilization schemes. Hansbo et al. \cite{hansbo2017cut} applied
@@ -118,30 +86,16 @@ Claus and Kerfriden~\cite{claus2019cutfem} used ghost penalty in the context of 
 where it proved crucial for handling moving interfaces.
 
 More recent developments include the work by Burman et al. \cite{burman2022cutfem} on robust preconditioners for
-ghost-penalty-stabilized systems, and \chreplaced{Sticko and Kreiss}{Sticko et al.} \cite{sticko2016stabilized} on
-efficient implementation strategies. \chreplaced{Schoeder}{Schöder} et al.~\cite{schoeder2020high} presented a
-high-order accurate cut finite element method with ghost penalty stabilization for \chreplaced{acoustics}{the Stokes
-    problem}. Burman et al. \cite{burman2022design} analyzed the design of ghost penalty operators for various
-applications, providing guidelines for parameter selection and stability analysis. \chadded{In~\cite{cui2025multigrid}
-    a patch smoother for multigrid methods applied to CutFEM yielded promising results.}
+ghost-penalty-stabilized systems, and {Sticko and Kreiss}~\cite{sticko2016stabilized} on efficient implementation
+strategies. {Schoeder}~et al.~\cite{schoeder2020high} presented a high-order accurate cut finite element method with
+ghost penalty stabilization for acoustics. Burman et al. \cite{burman2022design} analyzed the design of ghost penalty
+operators for various applications, providing guidelines for parameter selection and stability analysis.
+In~\cite{cui2025multigrid} a patch smoother for multigrid methods applied to CutFEM yielded promising results.
 
 In~\cite{frachon2024divergence} the authors present a divergence-free cut finite element method for the Stokes
 equations, where a special form of the ghost penalty stabilization is used to preserve divergence-free condition while
 providing stability. While in this work we focus on the standard ghost penalty stabilization, we expect the presented
 method to be extendable to cover this technique too.
-
-\chdeleted{Matrix-free~\cite{kronbichler2012generic} methods have gained popularity in recent years as a way to reduce
-    the
-    computational cost and memory
-    footprint of finite element simulations. These methods avoid the explicit assembly and storage of the stiffness
-    matrix,
-    instead computing the action of the matrix on a vector on-the-fly. This can lead to significant performance
-    improvements~\cite{fischer2020scalability,kronbichler2019fast, kronbichler2019multigrid}, especially for
-    large-scale
-    problems or high-order finite element spaces. Several works have explored the
-    use of matrix-free methods in the context of finite element simulations, including
-    \cite{kronbichler2023enhancing, davydov2020algorithms, davydov2020matrix, moxey2020efficient,
-        clevenger2020flexible}.}
 
 In the context of CutFEM, matrix-free evaluation of cell contributions has been explored in~\cite{bergbauer2024high}.
 However, applying ghost penalties for high-order methods using their approach would require evaluating higher-order
@@ -161,29 +115,25 @@ where the authors used projection into an uncut problem to define a precondition
 applied. In this paper, we focus on the matrix-free evaluation of the CutFEM operator with special emphasis on the
 ghost penalty operator only, leaving the choice of preconditioners for future work.
 
-\chadded{Another unfitted approach is the Shifted Boundary Method (SBM)~\cite{main2018shifted, atallah2020second},
-    which avoids
-    complex quadrature on cut cells by transferring boundary conditions to a surrogate boundary. This simplifies
-    implementation while avoiding the need for any stabilization and has been successfully applied to various
-    problems~\cite{atallah2020analysis, atallah2021analysis,
-        atallah2021shifted}. Recent developments include high-performance matrix-free implementations and specialized
-    geometric
-    multigrid preconditioners~\cite{wichrowski2025matrix, wichrowski2025geometric}.} \chadded{Aggregated Finite Element
-    Methods, merges degrees of freedom in cut cells to ensure stability without explicit penalty
-    terms~\cite{badia2018mixed, badia2021aggregated}.}
+Another unfitted approach is the Shifted Boundary Method (SBM)~\cite{main2018shifted, atallah2020second}, which avoids
+complex quadrature on cut cells by transferring boundary conditions to a surrogate boundary. This simplifies
+implementation while avoiding the need for any stabilization and has been successfully applied to various
+problems~\cite{atallah2021shifted}. Recent developments include high-performance matrix-free implementations and
+specialized geometric multigrid preconditioners~\cite{wichrowski2025matrix, wichrowski2025geometric}. Aggregated Finite
+Element Methods, merges degrees of freedom in cut cells to ensure stability without explicit penalty
+terms~\cite{badia2018mixed, badia2021aggregated}.
 
 This paper presents a matrix-free method for evaluating ghost penalty terms in CutFEM. In
 Subsection~\ref{sec:tensor_product}, which forms the core contribution of this work, we demonstrate how the
 tensor-product structure of the ghost penalty operator can be exploited for a matrix-free implementation. We show that
-the operator can be factored into products of one-dimensional operators, which dramatically reduces both the
-computational complexity and implementation effort. The key idea is to express the ghost penalty operator in terms of
-one-dimensional mass and penalty matrices, which can be precomputed and stored. This allows for an efficient evaluation
-of the operator on-the-fly, avoiding the need for explicit assembly of the global matrix.
+the operator is factored into products of one-dimensional operators, which dramatically reduces both the computational
+complexity and implementation effort. The key idea is to express the ghost penalty operator in terms of one-dimensional
+mass and penalty matrices, which can be precomputed and stored. This allows for an efficient evaluation of the operator
+on-the-fly, avoiding the need for explicit assembly of the global matrix.
 
-\chadded{Key components developed for this work have been integrated into the main
-    \texttt{deal.II} library and are included in the 9.7 release~\cite{dealII97}. This includes the assembly of the 1D
-    ghost penalty stabilization term, the numbering of degrees of freedom on two adjacent cells, and support for
-    additional ghost cells in the matrix-free framework.}
+Key components developed for this work have been integrated into the main \texttt{deal.II} library and are included in
+the 9.7 release~\cite{dealII97}. This includes the assembly of the 1D ghost penalty stabilization term, the numbering
+of degrees of freedom on two adjacent cells, and support for additional ghost cells in the matrix-free framework.
 
 We begin by presenting the CutFEM discretization in Section~\ref{sec:cutFEM}, introducing necessary notation and
 concepts. In Section~\ref{sec:numerical_results}, we validate our approach through numerical experiments, demonstrating
@@ -217,11 +167,11 @@ Our problem is to find the solution $u$ in the space $\mathbb{V}_h$ that satisfi
 In a classical approach, one requires both the solution and test function to vanish on the Dirichlet boundary. This is
 not the case in CutFEM, where it is not possible to enforce this condition directly due to the non-conforming nature of
 the mesh. Instead, we weakly enforce the Dirichlet boundary conditions by employing
-Nitsche's~\chreplaced{\cite{nitsche1971variationsprinzip, warburton2003constants}}{\cite{nitsche1971variationsprinzip}}
-method. This approach adds a term to the variational form, defined as
+Nitsche's~\cite{nitsche1971variationsprinzip, warburton2003constants} method. This approach adds a term to the
+variational form, defined as
 \begin{equation}
     \int_{\partial\Omega} \left( \frac{\partial u}{\partial n} v + \frac{\partial v}{\partial n} u +
-    \chreplaced{\frac{\gamma_D}{h} u v}{\gamma_D u v}
+    \frac{\gamma_D}{h} u v
     \right) \ds,
 \end{equation}
 where \( \gamma_D \) is a penalty parameter that provides stability of the method; we use \( \gamma_D = 30 k (k+1) \).
@@ -307,7 +257,7 @@ cost of the ghost penalty term can be reduced by exploiting the tensor product s
 The weak form of the problem is to find $u\in \mathbb{V}_h$ such that
 \begin{equation}
     \int_{\Omega} \nabla u \cdot \nabla v \dx + \int_{\partial\Omega} \left( \frac{\partial u}{\partial n} v +
-    \frac{\partial v}{\partial n} u + \chreplaced{\frac{\gamma_D}{h} u v}  {\gamma_D u v} \right) \ds + \sum_{F \in
+    \frac{\partial v}{\partial n} u + \frac{\gamma_D}{h} u v \right) \ds + \sum_{F \in
         \mathcal{F}_h} g_F(u,v)= \int_{\Omega} f v
     \dx \quad\quad \forall v \in
     \mathbb{V}_h.
@@ -316,10 +266,10 @@ The weak form of the problem is to find $u\in \mathbb{V}_h$ such that
 \subsection{Exploiting the Tensor Product Structure}
 \label{sec:tensor_product}
 For simplicity of presentation, we consider a 3D case with a hexahedral element; however, the reasoning can be easily
-transferred to the 2D case with quadrilateral elements. \chadded{The derivation relies on the fact that the cells are
-    aligned with the coordinate axes.} Consider a family of basis functions that are products of
+transferred to the 2D case with quadrilateral elements. The derivation relies on the fact that the cells are
+aligned with the coordinate axes. Consider a family of basis functions that are products of
 one-dimensional functions. Let the shape functions in
-each direction be denoted by \( \chreplaced{\phi_i(x_1)}{\phi_i(\xi)} \), where \( \chreplaced{x_1}{\xi} \) is the
+each direction be denoted by \( \phi_i(x_1) \), where \( x_1 \) is the
 reference coordinate in one dimension.
 We introduce the tensor product numbering, where each degree of freedom in a higher-dimensional element (e.g., a
 quadrilateral or hexahedral element) is associated with a combination of 1D indices, one for each spatial direction.
@@ -375,7 +325,7 @@ hyperrectangle. It can be represented as a Cartesian product of intervals $F_i$.
     \end{tikzpicture}
     \caption{Tensor product numbering of degrees of freedom for two adjacent quadratic elements $K_1$ and $K_2$  in 2D,
         sharing a face $F$. The numbers indicate the lexicographical ordering of the DoFs within each cell as well
-        as the corresponding multi-indices. \chadded{The figure shows a 2D case for simplicity of presentation.}}
+        as the corresponding multi-indices. The figure shows a 2D case for simplicity of presentation.}
     \label{fig:tensor_product_numbering}
 \end{figure}
 
@@ -397,25 +347,22 @@ expanding the shape functions using tensor products of one-dimensional shape fun
 Equation~(\ref{eq:tensor_product}) we obtain
 \begin{align}
     [\mathcal{G}_{F,k} ]_{i,j} &
-    = \left( [\partial_n^k \phi_j], [\partial_n^k \phi_i] \right)_F                                 \\
+    = \left( [\partial_n^k \phi_j], [\partial_n^k \phi_i] \right)_F                             \\
                                & = \Bigl( [\partial_n^k \phi_{i_1}] \cdot \phi_{i_2}\phi_{i_3},
-    [\partial_n^k \phi_{j_1}] \cdot \phi_{j_2}\phi_{j_3} \Bigr)_F                                   \\
-                               & =  \chreplaced{\left([\partial_n^k \phi_{i_1}] \cdot [\partial_n^k
-            \phi_{j_1}]\right)_{F_1} \cdot
-        \left( \phi_{i_2}\phi_{i_3} , \phi_{j_2}\phi_{j_3} \right)_{F_2\times F_3}}{[\partial_n^k \phi_{i_1}]_{F} \cdot
-        [\partial_n^k
-            \phi_{j_1}]_{F_1}	 \cdot
-        \Bigl( \phi_{i_2}\phi_{i_3} , \phi_{j_2}\phi_{j_3} \Bigr)_F}
+    [\partial_n^k \phi_{j_1}] \cdot \phi_{j_2}\phi_{j_3} \Bigr)_F                               \\
+                               & =  \left([\partial_n^k \phi_{i_1}] \cdot [\partial_n^k
+        \phi_{j_1}]\right)_{F_1} \cdot
+    \left( \phi_{i_2}\phi_{i_3} , \phi_{j_2}\phi_{j_3} \right)_{F_2\times F_3}
 \end{align}
-The part $  [\partial_n^k \phi_{i_1}]_{\chreplaced{F_1}{F}} \cdot [\partial_n^k     \phi_{j_1}]_{\chreplaced{F_1}{F}} $
+The part $  [\partial_n^k \phi_{i_1}]_{F_1} \cdot [\partial_n^k     \phi_{j_1}]_{F_1} $
 is   1D ghost penalty term corresponding to the  jump of the normal derivative of the 1D shape functions
 \begin{equation}
-    [G^h_k]_{i_1,j_1} = \left[\partial_n^k \phi_{i_1}\right]_{\chreplaced{F_1}{F}} \, \left[\partial_n^k
-        \phi_{j_1}\right]_{\chreplaced{F_1}{F}}.
+    [G^h_k]_{i_1,j_1} = \left[\partial_n^k \phi_{i_1}\right]_{F_1} \, \left[\partial_n^k
+        \phi_{j_1}\right]_{F_1}.
 \end{equation}
 The remaining part is the scalar product of the shape functions over the face can be broken down to 1D integrals
 \begin{equation}
-    \Bigl( \phi_{i_2}\phi_{i_3} , \phi_{j_2}\phi_{j_3} \Bigr)_{\chreplaced{F_2\times F_3}{F}}
+    \Bigl( \phi_{i_2}\phi_{i_3} , \phi_{j_2}\phi_{j_3} \Bigr)_{F_2\times F_3}
     = \Bigl( \phi_{i_2} , \phi_{j_2} \Bigr)_{F_2} \cdot \Bigl( \phi_{i_3} , \phi_{j_3} \Bigr)_{F_3}.
 \end{equation}
 where each corresponds to the mass matrix in the other 1D
@@ -425,7 +372,7 @@ where each corresponds to the mass matrix in the other 1D
 \end{equation}
 It is easy to see that all of those mass matrices are identical. Note that the number of basis functions in directions
 parallel to the face is $k+1$ and the number of basis functions in the direction orthogonal to the face is
-\chreplaced{$2k+1$}{$2k-1$}.
+2k+1.
 
 A simple calculation shows that in this setting the ghost penalty matrix $\mathcal{G}_{F,k}$ can be expressed as the
 following Kronecker product
@@ -446,8 +393,8 @@ is given by
 \end{align}
 The mass matrix is scaled by the cell diameter $h$ to obtain the mass matrix $M^h$ for the cell $K$:
 \begin{equation}
-    [M^h]_{i_1,j_1} = \left[\phi_{i_1}, \phi_{j_1}\right]_K =h\chdeleted{^{-1}} \left(\phi^{\text{ref}}_{i_1},
-    \phi^{\text{ref}}_{j_1}\right)_{\hat{K}} = h\chdeleted{^{-1}}[M^1]_{i_1,j_1}.
+    [M^h]_{i_1,j_1} = \left[\phi_{i_1}, \phi_{j_1}\right]_K =h \left(\phi^{\text{ref}}_{i_1},
+    \phi^{\text{ref}}_{j_1}\right)_{\hat{K}} = h[M^1]_{i_1,j_1}.
 \end{equation}
 Finally, the complete ghost penalty matrix is then given by the following sum
 \begin{align}
@@ -467,8 +414,7 @@ Finally, the complete ghost penalty matrix is then given by the following sum
     \right).
     \label{eq:ghostPenaltyMatrixRev}
 \end{align}
-\chreplaced{We store the precomputed mass matrix $h M^1$ and the penalty matrix}{We store the matrices precomputed mass
-    matrix	$h M^1$ and the penalty matrix}
+We store the precomputed mass matrix $h M^1$ and the penalty matrix
 \begin{equation}
     G^1 = \sum_{k=0}^p \left( { h^{-1} k!^{-2}} G^1_k \right).
 \end{equation}
@@ -502,54 +448,32 @@ computed in three steps:
     w_F^2 & =  \gamma_A \;  I \otimes h M^1 \otimes I \cdot w_F^{1}, \\
     w_F   & =  \gamma_A \; h M^1 \otimes I \otimes I \cdot w_F^{2}.
 \end{align}
-The first step computes the contribution of the ghost penalty term on the face $F$ to the vector $u$. \chreplaced{The
-    second
-    and third steps apply the mass matrix $M^h$ in the directions parallel to the face.}{The second
-    and third steps
-    apply the mass matrix $M^h$ in the directions orthogonal to the face.} \chreplaced
-{A simple calculation shows that the cost per face of applying the 1D ghost penalty
-    operator is $(k+1)^{d-1}(2k+1)^2$ operations, and applying each of the two mass matrices costs $(k+1)^d(2k+1)$
-    operations, leading to a total cost of $(k+1)^{d-1}(2k+1)^2 + 2(k+1)^d(2k+1)$ operations, which is $O(k^{d+1})$.}
-{A simple calculation shows that the overall cost per face of
-    applying
-    the 1D ghost
-    penalty operator is $O((2k+1)^2 (k+1)^{d-1}) $ and the mass matrices are $O((2k+1)(k+1)^{d} )$, leading to a total
-    cost of $O(k^{d+1})$ per face.}
+The first step computes the contribution of the ghost penalty term on the face $F$ to the vector $u$. The
+second
+and third steps apply the mass matrix $M^h$ in the directions parallel to the face.
+A simple calculation shows that the cost per face of applying the 1D ghost penalty
+operator is $(k+1)^{d-1}(2k+1)^2$ operations, and applying each of the two mass matrices costs $(k+1)^d(2k+1)$
+operations, leading to a total cost of $(k+1)^{d-1}(2k+1)^2 + 2(k+1)^d(2k+1)$ operations, which is $O(k^{d+1})$.
 
 \subsubsection{Treatment of Internal Cells}
-\chadded{The treatment of interior cells follows the standard matrix-free approach and is included here for
-    completeness.}
-For each cell $K \in \mathcal{T}$, the $i$-th element of the local contribution ${w}_{Ki}$ is computed by
+The treatment of interior cells follows the standard matrix-free approach and is included here for completeness. For
+each cell $K \in \mathcal{T}$, the $i$-th element of the local contribution ${w}_{Ki}$ is computed by
 \begin{equation}
-    w_{Ki}=\int\limits_K  \nabla u_K   \cdot \nabla {\phi }_i \;	\Dd x
-    = \sum_{q(K)}	\nabla u_K   \cdot  \nabla\phi_i \, J(x_q) \,
+    w_{Ki}=\int\limits_K  \nabla u_k   \cdot \nabla {\phi }_i \;	\Dd x
+    = \sum_{q(K)}	\nabla u_k   \cdot  \nabla\phi_i \, J(x_q) \,
     \omega_q.
 \end{equation}
 where $\phi_i$ is the $i$-th function of the local basis. The sum is taken over the $q(K)$ quadrature points $x_q$,
 with $J(x_q)$ being the Jacobian determinant
 at  $q$th quadrature point, and $\omega_q$ the quadrature weight.
 
-% \chreplaced{
-%     \begin{enumerate}
-%         \item \textbf{Evaluation}: Compute gradients  of solution  at quadrature points $\nabla u_q$.
-%         \item \textbf{Quadrature loop}: Queue $\nabla u_q$	for integration.
-%         \item \textbf{Integration}: Use the quadrature data to compute ${w}_{Ki}$ values.
-%     \end{enumerate}
-%     } 
-
-\chadded{The evaluation of this term is split into three stages. First, the \textit{evaluation} step: for each
-    quadrature point $x_q$, we
-    compute the gradient of the solution $\nabla u_K(x_q)$ and store it.
-    Next, in the \textit{quadrature loop} step, we prepare the data for integration by queuing the computed gradients
-    $\nabla u_K(x_q)$.
-    Finally, in the \textit{integration} step,
-    we
-    compute the local contributions $w_{Ki}$ by performing the integration, which involves contracting the stored
-    gradients
-    with test function gradients $\nabla\phi_i(x_q)$, Jacobian determinants $J(x_q)$, and quadrature weights
-    $\omega_q$. Both stages are performed efficiently using sum factorization, where the
-    integration step corresponds to the transpose of the evaluation operation~\cite{kopriva2009spectral,
-        deville2002high}.}
+The evaluation of this term is split into three stages. First, the \textit{evaluation} step: for each quadrature point
+$x_q$, we compute the gradient of the solution $\nabla u_K(x_q)$ and store it. Next, in the \textit{quadrature loop}
+step, we prepare the data for integration by queuing the computed gradients $\nabla u_K(x_q)$. Finally, in the
+\textit{integration} step, we compute the local contributions $w_{Ki}$ by performing the integration, which involves
+contracting the stored gradients with test function gradients $\nabla\phi_i(x_q)$, Jacobian determinants $J(x_q)$, and
+quadrature weights $\omega_q$. Both stages are performed efficiently using sum factorization, where the integration
+step corresponds to the transpose of the evaluation operation~\cite{kopriva2009spectral, deville2002high}.
 
 Matrix-free methods typically use sum factorization~\cite{kronbichler2019fast,fischer2020scalability} to bring down the
 cost of evaluating gradients \( \nabla u_K( {x}_q) \) at quadrature points. For integration, we use a tensor-product
@@ -581,20 +505,19 @@ reducing the complexity to $\mathcal{O}((k+1)^{d+1}) = \mathcal{O}((k+1)     N_c
 of degrees of freedom per element. The benefits are especially visible for higher-order elements, transforming what
 would otherwise be quadratic growth in computational cost into an almost linear complexity with respect to the degrees
 of freedom. Note that the cost of the cell evaluation grows at the same rate as the cost of evaluating the ghost
-penalty\chadded{.}
+penalty.
 
 \subsection{Treatment of Intersected Cells}
 
 For cells intersected by the boundary, the integration is performed only over the part of the cell that lies inside the
-domain $\Omega$. The \chreplaced{quadrature formula for such cells is precomputed and stored for each cell}{quadrature
-    formula for such cells is generated} according to a method described in \cite{saye2015high}, and implemented in
-\texttt{deal.II}~\cite{dealii2019design}. \chadded{The generated quadrature rule does not follow the tensor product
-    structure of the quadrature rule and as the results sum factorization cannot be used.} The quadrature points are
-generated using the mapping of the cell to the reference cell, with the quadrature points and weights adapted to the
-actual geometry of the intersection. For each intersected cell, we store:
+domain $\Omega$. The quadrature formula for such cells is generated according to a method described in
+\cite{saye2015high}, and implemented in \texttt{deal.II}~\cite{dealii2019design}. The generated quadrature rule does
+not follow the tensor product structure of the quadrature rule and as the results sum factorization cannot be used. The
+quadrature points are generated using the mapping of the cell to the reference cell, with the quadrature points and
+weights adapted to the actual geometry of the intersection. For each intersected cell, we store:
 \begin{itemize}
-    \item locations of quadrature points $x_q$ within the cell, \item\chreplaced{ inverse of the Jacobian matrix $\bfm{J}^{-T}$
-              of the reference-to-real cell mapping,}{ jacobian matrices $\bfm{J}$ for each cell,}
+    \item locations of quadrature points $x_q$ within the cell, \item{ inverse of the Jacobian matrix $\bfm{J}^{-T}$ of the
+          reference-to-real cell mapping,}
     \item integration weights $\omega_q$ accounting for the cut geometry,
     \item normal vectors at quadrature points on the boundary.
 \end{itemize}
@@ -606,26 +529,25 @@ modifications to account for the cut geometry. The weak form of the equation is 
     \approx \sum_{q(K \cap \Omega)}	\nabla u_K   \cdot  \nabla\phi_i \, J(x_q) \, \omega_q.
 \end{equation}
 
-\chadded{The evaluation of the local contribution proceeds in several steps, ordered to optimize memory access by
-    reading the
-    degrees of freedom for a cell only once.}\chdeleted{ The evaluation proceeds in the following steps:}
+The evaluation of the local contribution proceeds in several steps, ordered to optimize memory access by reading the
+degrees of freedom for a cell only once.
 \begin{enumerate}
     \item \textbf{Evaluation of Solution Gradients:} Evaluate the solution values at each quadrature point $x_I$
           inside the
           domain:
           \begin{align}
-              \nabla	 u_K(x_I) & = \sum_i u_{K,i} \chreplaced{\bfm{J}}{J}(x_I)^{-T}	\nabla \phi_i(x_I).
+              \nabla	 u_K(x_I) & = \sum_i u_{K,i} \bfm{J}(x_I)^{-T}	\nabla \phi_i(x_I).
           \end{align}
-          \chadded{Note: the mapping of gradients from the reference cell to the physical cell uses the
-              inverse-transpose
-              of the Jacobian matrix. In formulas below we therefore apply
-              $\nabla_x = \bfm{J}^{-T}\,\nabla_{\xi}$, where $\bfm{J}$ denotes the Jacobian matrix of the
-              reference-to-physical mapping and $J$ its determinant (used in quadrature weights).}
+          Note: the mapping of gradients from the reference cell to the physical cell uses the
+          inverse-transpose
+          of the Jacobian matrix. In formulas below we therefore apply
+          $\nabla_x = \bfm{J}^{-T}\,\nabla_{\xi}$, where $\bfm{J}$ denotes the Jacobian matrix of the
+          reference-to-physical mapping and $J$ its determinant (used in quadrature weights).
     \item \textbf{Evaluation of Gradients and Values at the Boundary:} Evaluate the solution values at each
           quadrature point $ x_S$ at the boundary:
           \begin{align}
-              u_K(x_S)          & = \sum_i u_{K,i}  \phi_i(x_S)                                                    \\
-              \nabla   u_K(x_S) & = \sum_i u_{K,i} \chreplaced{\bfm{J}^{-1}(x_S)}{J(x_S)^{-1}}	\nabla \phi_i(x_S).
+              u_K(x_S)          & = \sum_i u_{K,i}  \phi_i(x_S)                          \\
+              \nabla   u_K(x_S) & = \sum_i u_{K,i} \bfm{J}^{-1}(x_S)	\nabla \phi_i(x_S).
           \end{align}
     \item \textbf{Integration inside the cell:} Integrate using the precomputed weights specific to the part of the
           cell inside the domain:
@@ -639,9 +561,8 @@ modifications to account for the cut geometry. The weak form of the equation is 
               w^{\partial\Omega}_{Ki} \stackrel{+}{\leftarrow} \sum_{q(K \cap \partial\Omega)} \left( \frac{\partial
                   u}{\partial
                   n}(x_q)
-              \phi_i(x_q) + \frac{\partial \phi_i}{\partial n}(x_q) u(x_q) + \chreplaced{\frac{\gamma_D}{h} u(x_q)
-                  \phi_i(x_q)}{\gamma_D u(x_q)
-                  \phi_i(x_q)} \right)
+              \phi_i(x_q) + \frac{\partial \phi_i}{\partial n}(x_q) u(x_q) + \frac{\gamma_D}{h} u(x_q)
+              \phi_i(x_q) \right)
               \cdot
               J(x_q)
               \cdot
@@ -661,13 +582,10 @@ penalty and the interior cells. The procedure of applying the operator $\mathcal
 Algorithm~\ref{alg:mf_generic}. This algorithm outlines the steps for computing $w = \mathcal{A}u$ in a matrix-free
 manner, accounting for both interior and intersected cells, as well as the ghost penalty contributions.
 
-\chreplaced{As the matrix-vector product is a key performance component of any iterative solver, we aim to utilize the
-    hardware as efficiently as possible.}{As we expect this to be the most computationally intensive part of any
-    matrix-free solver for CutFEM, we aim to utilize
-    the hardware as efficiently as possible.} Hence using vectorized operation is crucial for the performance of the
-method.
-On every cell inside the domain the operation is identical hence vectorization over the cells comes up naturally.  The
-other group of cells are the intersected cells, where the number quadrature points may vary from cell to cell.
+As the matrix-vector product is a key performance component of any iterative solver, we aim to utilize the hardware as
+efficiently as possible. Hence using vectorized operation is crucial for the performance of the method. On every cell
+inside the domain the operation is identical hence vectorization over the cells comes up naturally. The other group of
+cells are the intersected cells, where the number quadrature points may vary from cell to cell.
 
 We assign each cell one of two categories: interior cells and intersected cells and next group cell of each category
 into batches. While applying the operator we loop over the batches of cells. The interior cells are processed in a
@@ -682,58 +600,29 @@ ordering across two neighboring cells. To achieve this, we copy the values of lo
 into a single array with the desired ordering. Then the operator is applied to the combined array, and the results are
 scattered back to the local arrays.
 
-\chadded{For load balancing we use a similar strategy to~\cite{bergbauer2024high} where to each cell a weight is
-    assigned. For
-    cells outside the domain the weight is zero, for cells strictly inside the domain the weight is one, and for
-    intersected cells the weight is $k^{d-1}$. This estimate comes from the comparison of complexity of evalution in
-    interior cells and intersected cells. The cells are then redistributed among the processors in such a way that the
-    sum of the weights is equal for each processor.}
+For load balancing we use a similar strategy to~\cite{bergbauer2024high} where to each cell a weight is assigned. For
+cells outside the domain the weight is zero, for cells strictly inside the domain the weight is one, and for
+intersected cells the weight is $k^{d-1}$. This estimate comes from the comparison of complexity of evalution in
+interior cells and intersected cells. The cells are then redistributed among the processors in such a way that the sum
+of the weights is equal for each processor.
 
-\chreplaced{The ghost penalty operator is applied in a separate loop over the relevant faces, which are grouped into
-    vectorization batches based on their normal direction. In the parallel setting, faces shared between MPI ranks are
-    processed by the rank with the lowest ID to avoid redundant computations. This simple rule can lead to a slight
-    load
-    imbalance, but its impact is limited since the ghost penalty evaluation constitutes a relatively small fraction of
-    the
-    total computational cost, as shown in Figure~\ref{fig:vmult_time_breakdown}. Further optimizations, such as fusing
-    the
-    face loop with the cell loop to reduce memory transfers, were considered but not implemented due to their
-    complexity
-    and the diminishing returns as the mesh is refined and the fraction of stabilized faces decreases.}{The faces
-    between
-    ghosted and non-ghosted cells can be processed by two MPI ranks. In our case the process with the
-    lowest rank is always responsible for the given face. This however results in a slight imbalance of the
-    computational load between the processors. The impact of this imbalance is limited as the number of faces with
-    ghost penalty is small compared to the total number of cells, and it can be further reduced by using a more
-    complex
-    partitioning strategy, but this would require a more complex implementation and as the potential gains are limited
-    we decided to keep the current approach.
-
-    Finally the ghost penalty operator is applied to the faces. The faces are grouped into vectorization batches based on
-    the normal direction and the operator is applied to each batch. We note that memory transfers could be reduced during
-    this step by combining the application of the ghost penalty operator with the cell loop. This however would require a
-    more complex implementation and as the fraction of faces with ghost penalty is decreasing with mesh refinement the
-    potential gains are limited.}
+The ghost penalty operator is applied in a separate loop over the relevant faces, which are grouped into vectorization
+batches based on their normal direction. In the parallel setting, faces shared between MPI ranks are processed by the
+rank with the lowest ID to avoid redundant computations. This simple rule can lead to a slight load imbalance, but its
+impact is limited since the ghost penalty evaluation constitutes a relatively small fraction of the total computational
+cost, as shown in Figure~\ref{fig:vmult_time_breakdown}. Further optimizations, such as fusing the face loop with the
+cell loop to reduce memory transfers, were considered but not implemented due to their complexity and the diminishing
+returns as the mesh is refined and the fraction of stabilized faces decreases.
 
 % \paragraph{Parallelization}
-\chcomment{this paragraph has been moved  to impact the flow of the text
-}{We use the distributed computing  via MPI through infrastructure implemented in \texttt{deal.II}.
-    The cells are distributed among the processors and the operator is applied in parallel. The communication between
-    the
-    processors is minimized by using the ghosted vectors, which store the values of the solution on the neighboring
-    cells.
-    The values of the solution on the ghost cells are updated after each application of the operator. The main
-    difference
-    between application of the operator considered in this work and the standard matrix-free approach is that
-    the ghost penalty operator is applied to the faces. This requires extending the data structures inside matrix-free
-    infrastructure to store information about the ghost cell.}
+We use the distributed computing via MPI through infrastructure implemented in \texttt{deal.II}. The cells are
+distributed among the processors and the operator is applied in parallel. The communication between the processors is
+minimized by using the ghosted vectors, which store the values of the solution on the neighboring cells. The values of
+the solution on the ghost cells are updated after each application of the operator. The main difference between
+application of the operator considered in this work and the standard matrix-free approach is that the ghost penalty
+operator is applied to the faces. This requires extending the data structures inside matrix-free infrastructure to
+store information about the ghost cell.
 
-\chdeleted{For load balancing we use a similar strategy to~\cite{bergbauer2024high} where to each cell a weight is
-    assigned. For
-    cells outside the domain the weight is zero, for cells strictly inside the domain the weight is one, and for
-    intersected cells the weight is $k^{d-1}$. This estimate comes from the comparison of complexity of evalution in
-    interior cells and intersected cells. The cells are then redistributed among the processors in such a way that the
-    sum of the weights is equal for each processor.}
 \begin{algorithm}[!ht]
     \SetKwInOut{Input}{Given}
     \SetKwInOut{Output}{Return}
@@ -747,8 +636,8 @@ scattered back to the local arrays.
 
             Gather element-local vector values\\ Evaluate gradients at each quadrature point: \\ \Indp \tcp*{Sum factorization}
             \Indm \ForEach{quadrature point $q$ on $K$ }{ Queue $\nabla u_q$ for integration\; } Integrate queued gradients: \\
-            \Indp $w_{Ki} \leftarrow \sum_q \nabla {\phi}_i(x_q) \cdot \chreplaced{\bfm{J}^{-T}(x_q)}{J(x_q)} \nabla {u}_K(x_q) \,
-                \, \omega_q$ \tcp*{Sum factorization} \Indm Scatter results to ${w}$\\
+            \Indp $w_{Ki} \leftarrow \sum_q \nabla {\phi}_i(x_q) \cdot \bfm{J}^{-T}(x_q) \nabla {u}_K(x_q) \, \, \omega_q$
+            \tcp*{Sum factorization} \Indm Scatter results to ${w}$\\
 
         }
 
@@ -758,12 +647,12 @@ scattered back to the local arrays.
             Evaluate gradients and values at surface quadrature point: \\ \Indp $\nabla {u}_{K}(x_S) \qquad {u}_{K} (x_S) $\\ \Indm
 
             \ForEach{quadrature point $q$ inside  $\Omega$	}{
-                Queue $u(x_S)$	and   $ \frac{\partial u}{\partial n}(x_S)	+ \chreplaced{\frac{\gamma_D}{h}
-                        u(x_S)}{\gamma_D u(x_S)}  $ for integration \\
+                Queue $u(x_S)$	and   $ \frac{\partial u}{\partial n}(x_S)	+ \frac{\gamma_D}{h}
+                    u(x_S)  $ for integration \\
             }
             Integrate queued gradients:\\
             \Indp
-            $w_{Ki} \leftarrow \sum_ {x_S}\nabla {\phi}_i(x_S) \cdot  \chreplaced{\bfm{J}^{-T}(x_S)}{J(x_S)} \nabla
+            $w_{Ki} \leftarrow \sum_ {x_S}\nabla {\phi}_i(x_S) \cdot  \bfm{J}^{-T}(x_S) \nabla
                 {u}_K(x_S) \,
                 \, \omega(x_S) $
             \\
@@ -771,12 +660,11 @@ scattered back to the local arrays.
 
             Evaluate gradients at each quadrature point inside the domain: \\ \Indp $\nabla {u}_{K}(x_I) $\\ \Indm
             \ForEach{quadrature point $q$ on $\partial \Omega$ }{ Queue $\nabla u_q$ for integration \\ } Integrate queued
-            gradients: \\ \Indp $w_{Ki} \stackrel{+}{\leftarrow} \sum_q \nabla {\phi}_i(x_q) \cdot
-                \chreplaced{\bfm{J}^{-T}(x_q)}{J(x_q)} \nabla {u}_K(x_q) \, \, \omega_q$ \\ \Indm Scatter results to ${w}$\\ } }
-    \ForEach{face $F \in \mathcal{F}_h^h$ \tcp*{Apply ghost penalty} }{ Gather face-local vector values on this face
-        $u_F$\\ Evaluate local ghost penalty operator: \\ \Indp \(w_F \leftarrow \mathcal{G}_F u_F \) \\ \Indm Scatter results
-        to ${w}$\\ } Import contributions $w$ \tcp*{Parallel communication} \caption{Matrix-free application of the CutFEM
-        operator} \label{alg:mf_generic}
+            gradients: \\ \Indp $w_{Ki} \stackrel{+}{\leftarrow} \sum_q \nabla {\phi}_i(x_q) \cdot \bfm{J}^{-T}(x_q) \nabla
+                {u}_K(x_q) \, \, \omega_q$ \\ \Indm Scatter results to ${w}$\\ } } \ForEach{face $F \in \mathcal{F}_h^h$ \tcp*{Apply
+            ghost penalty} }{ Gather face-local vector values on this face $u_F$\\ Evaluate local ghost penalty operator: \\ \Indp
+        \(w_F \leftarrow \mathcal{G}_F u_F \) \\ \Indm Scatter results to ${w}$\\ } Import contributions $w$ \tcp*{Parallel
+        communication} \caption{Matrix-free application of the CutFEM operator} \label{alg:mf_generic}
 \end{algorithm}
 
 \section{Results}
@@ -789,55 +677,35 @@ we also demonstrate the impact of the fraction of intersected cells on the overa
 The computations were performed on a machine equipped with dual-socket AMD EPYC 7282 processor at 2800 GHz with 16
 cores
 per socket, the performance measurements were taken using 32 MPI ranks.
-The code was compiled using GCC 11.4.0 with the optimization level set to \chreplaced{\texttt{-O3}}{\texttt{O3}}.
-\chcomment{Section with convergence results has been removed}
+The code was compiled using GCC 11.4.0 with the optimization level set to \texttt{-O3}.
 
 \subsection{Computational Efficiency}
 
-\chadded{To verify the computational complexity estimates, we isolate the computational cost of the core operator
-    components from parallel overhead and memory access
-    patterns, we first perform a sequential benchmark on a single cell. This experiment is designed to be compute-bound
-    by
-    repeating the evaluation many times over the same data, thus highlighting the raw floating-point performance and
-    algorithmic complexity of each method.}
-To illustrate the performance of the key components of the method, we benchmarked the computational cost of the
-Laplacian operator on a single cell in both 2D and 3D. \chreplaced{We compared three approaches: (i) a standard
-    matrix-free
-    evaluation exploiting tensor product factorization (\texttt{FEEvaluation}), (ii) a version that skips the tensor
-    product
-    factorization (\texttt{FEPointEvaluation}), and (iii) the ghost penalty evaluation on one face
-    (\texttt{GhostPenalty}).
-    The first two names refer to classes in \texttt{deal.II}.}{We compared three approaches: (i) a standard
-    matrix-free
-    evaluation exploiting tensor product factorization (FEEvaluation), (ii) a version that skips the tensor product
-    factorization (FEPointEvaluation), and (iii) the ghost penalty evaluation on one face (GhostPenalty). The two first
-    names refer to the classes in \texttt{deal.II}.} \chadded{The \texttt{FEEvaluation} and
-    \texttt{FEPointEvaluation} approaches correspond to the matrix-free evaluation techniques presented in Bergbauer et
-    al.~\cite{bergbauer2024high}. Our work extends this framework by introducing an efficient, tensor-product-based
-    evaluation for the ghost penalty term, which was not addressed in~\cite{bergbauer2024high}.} The results,
-averaged~\chadded{\cite{hoefler2015scientific}} over 10,000 applications, are shown in
-Figure~\ref{fig:single_cell_performance}.
-We show the relative timings,
-that is obtained by dividing the time for each method by the time of FEEvaluation for $k=1$. In 2D that is 0.077
-$\mu$s, while in 3D it is 0.2218 $\mu$s. \chreplaced{To ensure a fair comparison, the
-    timings
-    for \texttt{FEEvaluation} and \texttt{GhostPenalty},
-    which are vectorized over multiple cells using SIMD instructions, were divided by the vectorization size. The
-    experiment was performed in double precision, and the vectorization size is 4 (using 256-bit AVX2
-    instructions).}{To ensure a fair comparison, the timings for FEEvaluation and
-    GhostPenalty,
-    which are vectorized over multiple cells using SIMD instructions (with a
-    vectorization size of 8 for our CPU), were divided by the vectorization size.}
-The
-\chreplaced{\texttt{FEPointEvaluation}}{FEPointEvaluation}
-is vectorized within one cell.
+To verify the computational complexity estimates, we isolate the computational cost of the core operator components
+from parallel overhead and memory access patterns, we first perform a sequential benchmark on a single cell. This
+experiment is designed to be compute-bound by repeating the evaluation many times over the same data, thus highlighting
+the raw floating-point performance and algorithmic complexity of each method. To illustrate the performance of the key
+components of the method, we benchmarked the computational cost of the Laplacian operator on a single cell in both 2D
+and 3D. We compared three approaches: (i) a standard matrix-free evaluation exploiting tensor product factorization
+(\texttt{FEEvaluation}), (ii) a version that skips the tensor product factorization (\texttt{FEPointEvaluation}), and
+(iii) the ghost penalty evaluation on one face (\texttt{GhostPenalty}). The first two names refer to classes in
+\texttt{deal.II}. The \texttt{FEEvaluation} and \texttt{FEPointEvaluation} approaches correspond to the matrix-free
+evaluation techniques presented in Bergbauer et al.~\cite{bergbauer2024high}. Our work extends this framework by
+introducing an efficient, tensor-product-based evaluation for the ghost penalty term, which was not addressed
+in~\cite{bergbauer2024high}. The results, averaged~\cite{hoefler2015scientific} over 10,000 applications, are shown in
+Figure~\ref{fig:single_cell_performance}. We show the relative timings, that is obtained by dividing the time for each
+method by the time of FEEvaluation for $k=1$. In 2D that is 0.077 $\mu$s, while in 3D it is 0.2218 $\mu$s. To ensure a
+fair comparison, the timings for \texttt{FEEvaluation} and \texttt{GhostPenalty}, which are vectorized over multiple
+cells using SIMD instructions, were divided by the vectorization size. The experiment was performed in double
+precision, and the vectorization size is 4 (using 256-bit AVX2 instructions). The \texttt{FEPointEvaluation} is
+vectorized within one cell.
 
-The computational cost of the ghost penalty scales similarly to \chreplaced{\texttt{FEEvaluation}}{FEEvaluation}, as
-both methods involve tensor product operations. \chreplaced{\texttt{FEPointEvaluation}}{FEPointEvaluation} exhibits a
-higher computational cost, that is especially visible in 3D focus. This behavior aligns with the expected computational
-complexity estimates, where tensor product factorization reduces the overall cost of the operator application. Note the
-test is performed with minimal number of quadrature points, while for a cut cell the number of quadrature points might
-be higher. Hence, the evalution on those cell might be even more expensive.
+The computational cost of the ghost penalty scales similarly to \texttt{FEEvaluation}, as both methods involve tensor
+product operations. \texttt{FEPointEvaluation} exhibits a higher computational cost, that is especially visible in 3D
+focus. This behavior aligns with the expected computational complexity estimates, where tensor product factorization
+reduces the overall cost of the operator application. Note the test is performed with minimal number of quadrature
+points, while for a cut cell the number of quadrature points might be higher. Hence, the evalution on those cell might
+be even more expensive.
 
 %%%% TODO!!!: change to log-log plot, make lines for O(p^d) and O(p^{d+1})
 %%% TODO THere is a mistake, vectorization is over 4 not 8.
@@ -925,21 +793,12 @@ be higher. Hence, the evalution on those cell might be even more expensive.
     \label{fig:single_cell_performance}
 \end{figure}
 
-\chreplaced{We evaluate the computational efficiency of the matrix-free
-    approach
-    by measuring the throughput of a single
-    matrix-vector multiplication (vmult), measured in degrees of freedom (DoFs) per second.}{We evaluate the
-    computational efficiency of the matrix-free approach by measuring the average time required
-    for a
-    single
-    matrix-vector multiplication (vmult) per unknown.} \chadded{The number of
-    DoFs
-    corresponds to the active degrees of freedom, i.e., those associated with cells that have a non-empty intersection
-    with
-    the domain $\Omega$. Degrees of freedom on cells lying entirely outside $\Omega$ are excluded from the computation
-    and
-    timing.} Figure~\ref{fig:vmult_time_vs_degree} shows that the time per degree
-of freedom decreases with increasing polynomial degree, indicating improved efficiency for higher-order elements.
+We evaluate the computational efficiency of the matrix-free approach by measuring the throughput of a single
+matrix-vector multiplication (vmult), measured in degrees of freedom (DoFs) per second. The number of DoFs corresponds
+to the active degrees of freedom, i.e., those associated with cells that have a non-empty intersection with the domain
+$\Omega$. Degrees of freedom on cells lying entirely outside $\Omega$ are excluded from the computation and timing.
+Figure~\ref{fig:vmult_time_vs_degree} shows that the time per degree of freedom decreases with increasing polynomial
+degree, indicating improved efficiency for higher-order elements.
 
 \begin{figure}[!ht]
     \centering
@@ -1027,8 +886,8 @@ of freedom decreases with increasing polynomial degree, indicating improved effi
     }
     \caption{Problem with a single ball: Throughput of matrix-vector multiplication in degrees of freedom per second
         for different
-        polynomial degrees. \chadded{All throughput values are reported as DoFs/s, and only DoFs on active cells are
-            included.}}
+        polynomial degrees. All throughput values are reported as DoFs/s, and only DoFs on active cells are
+        included.}
     \label{fig:vmult_time_vs_degree}
 \end{figure}
 
@@ -1044,17 +903,11 @@ balls, each with randomly chosen centers and a radius inversely proportional to 
 domain may not necessarily be connected, as the balls might not intersect, this setup allows us to effectively
 demonstrate the impact of the number of intersected cells on the overall performance.
 
-\chreplaced{For a fixed 3D mesh, obtained by refining a single cell 5 times, we vary the number of balls and measure
-    the vmult time per unknown.}{For a fixed 3D mesh consisting of obtained by refining a single cell 5 times, we vary
-    the
-    number of
-    balls from 1 to  and measure the vmult time per unknown.} Figure~\ref{fig:vmult_time_complex_domain} illustrates
-the
-throughput in DoFs per second for different polynomial degrees as a function of the intersected cell fraction. Note
-that
-the number of degrees of freedom per cell varies depending on the
-geometry of the domain, as the cells outside the domain are omitted in the computation. The minimum and maximum number
-of degrees of freedom per cell for different polynomial degrees are shown in
+For a fixed 3D mesh, obtained by refining a single cell 5 times, we vary the number of balls and measure the vmult time
+per unknown. Figure~\ref{fig:vmult_time_complex_domain} illustrates the throughput in DoFs per second for different
+polynomial degrees as a function of the intersected cell fraction. Note that the number of degrees of freedom per cell
+varies depending on the geometry of the domain, as the cells outside the domain are omitted in the computation. The
+minimum and maximum number of degrees of freedom per cell for different polynomial degrees are shown in
 Table~\ref{tab:dofs_per_cell}. The highest number of degrees of freedom per cell is achieved for the case of a single
 ball in the domain, while the lowest is achieved for the case of a domain consisting of a maximum number of balls.
 
@@ -1072,10 +925,10 @@ ball in the domain, while the lowest is achieved for the case of a domain consis
     \label{tab:dofs_per_cell}
 \end{table}
 
-We clearly observe that the \chreplaced{throughput decreases}{vmult time per unknown increases} with the intersected
-cell fraction, and this performance deterioration is more pronounced for higher polynomial degrees. This is expected as
-the integration over the intersected cells requires special quadrature rules that break the tensor product structure,
-leading to higher computational costs per element, as illustrated in Figure~\ref{fig:single_cell_performance}.
+We clearly observe that the throughput decreases with the intersected cell fraction, and this performance deterioration
+is more pronounced for higher polynomial degrees. This is expected as the integration over the intersected cells
+requires special quadrature rules that break the tensor product structure, leading to higher computational costs per
+element, as illustrated in Figure~\ref{fig:single_cell_performance}.
 
 \begin{figure}[!ht]
     \centering
@@ -1132,10 +985,9 @@ leading to higher computational costs per element, as illustrated in Figure~\ref
 
 To show the diminishing impact of the intersected cells on the overall performance, we repeat the test for a fixed
 number of balls (25), resulting in the fraction of intersected cells decreasing with mesh refinement from 60\% to 15\%.
-\chadded{The problem domain for 25 balls is illustrated in the left part of Figure~\ref{fig:vmult_time_vs_refinement}.}
-We measure \chreplaced{throughput}{the vmult time per unknown} for selected polynomial degrees on subsequently refined
-meshes. \chadded{The right panel of Figure}~\ref{fig:vmult_time_vs_refinement} illustrates the performance of the
-method with increasing problem size.
+The problem domain for 25 balls is illustrated in the left part of Figure~\ref{fig:vmult_time_vs_refinement}. We
+measure throughput for selected polynomial degrees on subsequently refined meshes. The right panel of
+Figure~\ref{fig:vmult_time_vs_refinement} illustrates the performance of the method with increasing problem size.
 
 \begin{figure}[!ht]
     \begin{minipage}[b][0.45\textwidth][c]{0.47\textwidth}
@@ -1206,27 +1058,26 @@ method with increasing problem size.
         cell. Black lines form the outline of the mesh. Right: Throughput of matrix-vector multiplication in DoF per
         second for a problem with 25 balls on
         subsequently refined meshes. The dashed lines show the performance for a single ball for comparison.
-        \chadded{Throughput is measured as DoFs/s, counting only active
-            degrees of freedom.}
+        Throughput is measured as DoFs/s, counting only active
+        degrees of freedom.
     }
     \label{fig:vmult_time_vs_refinement}
 \end{figure}
 
-More insights can be gained by breaking down the \chreplaced{execution time}{vmult time per unknown} into the time
-spent on each part of the algorithm. We examine a 3D problem from the previous experiments, using the finest mesh,
-$k=3$, and 26\% cut cells, resulting in a total of 6,129,445 DoFs. \chdeleted{The problem is illustrated in
-    Figure~\ref{fig:problem_domain}.}
+More insights can be gained by breaking down the execution time into the time spent on each part of the algorithm. We
+examine a 3D problem from the previous experiments, using the finest mesh, $k=3$, and 26\% cut cells, resulting in a
+total of 6,129,445 DoFs.
 
 Figure~\ref{fig:vmult_time_breakdown} shows the percentage of time spent on computations involving cut cells, interior
-cells, ghost penalty terms, and the time spent on MPI communication. \chadded{The timings are aggregated over all 32
-    MPI ranks. The 'MPI' category represents time spent in communication and synchronization, and therefore implicitly
-    includes the effects of load imbalance. The dominance of the 'Intersected' cells category is consistent with the
-    single-cell benchmarks in Figure~\ref{fig:single_cell_performance}, which show that evaluation on cut cells (which
-    cannot use tensor-product factorization for quadrature) is significantly more expensive than on interior cells.} The
-cut cells consume the most time (65.5\%), followed by the ghost penalty (14.6\%), MPI communication (12.3\%) and
-interior cells (6.5\%). The interior cell computations are more efficient due to the exploitation of the tensor-product
-structure that is not possible on the cut cells. Computing the ghost penalty takes a fraction of the time compared to
-the cut cells. The MPI communication time is relatively low, given how simple the load balancing algorithm is.
+cells, ghost penalty terms, and the time spent on MPI communication. The timings are aggregated over all 32 MPI ranks.
+The 'MPI' category represents time spent in communication and synchronization, and therefore implicitly includes the
+effects of load imbalance. The dominance of the 'Intersected' cells category is consistent with the single-cell
+benchmarks in Figure~\ref{fig:single_cell_performance}, which show that evaluation on cut cells (which cannot use
+tensor-product factorization for quadrature) is significantly more expensive than on interior cells. The cut cells
+consume the most time (65.5\%), followed by the ghost penalty (14.6\%), MPI communication (12.3\%) and interior cells
+(6.5\%). The interior cell computations are more efficient due to the exploitation of the tensor-product structure that
+is not possible on the cut cells. Computing the ghost penalty takes a fraction of the time compared to the cut cells.
+The MPI communication time is relatively low, given how simple the load balancing algorithm is.
 
 \begin{figure}[!ht]
     \centering
@@ -1273,7 +1124,7 @@ the cut cells. The MPI communication time is relatively low, given how simple th
 \section{Conclusion}
 \label{sec:conclusion}
 
-\chcomment{Conclusion was rewritten.}
+Conclusion was rewritten.
 
 We have presented an efficient matrix-free approach for implementing and evaluating ghost penalty stabilization within
 the Cut Finite Element Method framework. Our contribution lies in recognizing and exploiting the tensor-product
