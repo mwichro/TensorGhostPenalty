@@ -1,0 +1,65 @@
+.cproject  
+.project
+
+# Compiled Object files
+*.slo
+*.lo
+*.o
+*.obj
+
+# Precompiled Headers
+*.gch
+*.pch
+
+# Compiled Dynamic libraries
+*.so
+*.dylib
+*.dll
+
+# Fortran module files
+*.mod
+
+# Compiled Static libraries
+*.lai
+*.la
+*.a
+*.lib
+
+# Executables
+*.exe
+*.out
+*.app
+
+# CMake garbage
+CMakeFiles
+CMakeCache.txt
+
+compile_commands.json
+/build/*
+.vscode/*
+doc/coverP.aux
+doc/coverP.fdb_latexmk
+doc/coverP.fls
+doc/coverP.log
+doc/SiamCSE.aux
+doc/SiamCSE.cb
+doc/SiamCSE.cb2
+doc/SiamCSE.fdb_latexmk
+doc/SiamCSE.fls
+doc/SiamCSE.log
+doc/SiamCSE.nav
+doc/SiamCSE.snm
+doc/SiamCSE.synctex.gz
+doc/SiamCSE.toc
+doc/tensor_ghost_penalty.aux
+doc/tensor_ghost_penalty.bbl
+doc/tensor_ghost_penalty.blg
+doc/tensor_ghost_penalty.cb
+doc/tensor_ghost_penalty.cb2
+doc/tensor_ghost_penalty.fls
+doc/tensor_ghost_penalty.log
+doc/tensor_ghost_penalty.pgf-plot.gnuplot
+doc/tensor_ghost_penalty.synctex.gz
+doc/tensor_ghost_penalty.d1.gnuplot
+doc/tensor_ghost_penalty.fdb_latexmk
+doc/coverP.synctex.gz
