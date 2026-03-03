@@ -606,28 +606,30 @@ ordering across two neighboring cells. To achieve this, we copy the values of lo
 into a single array with the desired ordering. Then the operator is applied to the combined array, and the results are
 scattered back to the local arrays.
 
-For load balancing we use a similar strategy to~\cite{bergbauer2024high} where to each cell a weight is assigned. For
-cells outside the domain the weight is zero, for cells strictly inside the domain the weight is one, and for
-intersected cells the weight is $k^{d-1}$. This estimate comes from the comparison of complexity of evalution in
-interior cells and intersected cells. The cells are then redistributed among the processors in such a way that the sum
-of the weights is equal for each processor.
+\chadded{To ensure efficient utilization of parallel hardware, we use distributed computing via MPI through
+    infrastructure implemented in \texttt{deal.II}. The cells are partitioned and distributed among the processors, and
+    the operator is applied in parallel. For load balancing, we use a similar strategy to~\cite{bergbauer2024high} where
+    to each cell a weight is assigned. For cells outside the domain the weight is zero, for cells strictly inside the
+    domain the weight is one, and for intersected cells the weight is $k^{d-1}$. This estimate comes from the comparison
+    of complexity of evaluation in interior cells and intersected cells. The cells are then redistributed among the
+    processors (MPI ranks) in such a way that the sum of the weights is balanced across the partition.}
 
 The ghost penalty operator is applied in a separate loop over the relevant faces, which are grouped into vectorization
 batches based on their normal direction. In the parallel setting, faces shared between MPI ranks are processed by the
 rank with the lowest ID to avoid redundant computations. This simple rule can lead to a slight load imbalance, but its
 impact is limited since the ghost penalty evaluation constitutes a relatively small fraction of the total computational
-cost, as shown in Figure~\ref{fig:vmult_time_breakdown}. Further optimizations, such as fusing the face loop with the
-cell loop to reduce memory transfers, were considered but not implemented due to their complexity and the diminishing
-returns as the mesh is refined and the fraction of stabilized faces decreases.
+cost, as shown in Figure~\ref{fig:vmult_time_breakdown}.
 
-% \paragraph{Parallelization}
-We use the distributed computing via MPI through infrastructure implemented in \texttt{deal.II}. The cells are
-distributed among the processors and the operator is applied in parallel. The communication between the processors is
-minimized by using the ghosted vectors, which store the values of the solution on the neighboring cells. The values of
-the solution on the ghost cells are updated after each application of the operator. The main difference between
-application of the operator considered in this work and the standard matrix-free approach is that the ghost penalty
-operator is applied to the faces. This requires extending the data structures inside matrix-free infrastructure to
-store information about the ghost cell.
+\chadded{The communication between the processors is minimized
+    by using ghosted vectors, which store the values of the solution on the neighboring cells. The values of the solution
+    on the ghost cells are updated after each application of the operator. The main difference between the application of
+    the operator considered in this work and the standard matrix-free approach is that the ghost penalty operator is
+    applied to the faces. This requires extending the data structures inside the matrix-free infrastructure to store
+    information about the ghost cells.}
+
+Further optimizations, such as fusing the face loop with the cell loop down to the level of memory transfers, were
+considered but not implemented due to their complexity and the diminishing returns as the mesh is refined and the
+fraction of stabilized faces decreases.
 
 \begin{algorithm}[!ht]
     \SetKwInOut{Input}{Given}
