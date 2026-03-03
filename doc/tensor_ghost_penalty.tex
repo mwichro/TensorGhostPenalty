@@ -119,9 +119,9 @@ Another unfitted approach is the Shifted Boundary Method (SBM)~\cite{main2018shi
 complex quadrature on cut cells by transferring boundary conditions to a surrogate boundary. This simplifies
 implementation while avoiding the need for any stabilization and has been successfully applied to various
 problems~\cite{atallah2021shifted}. Recent developments include high-performance matrix-free implementations and
-specialized geometric multigrid preconditioners~\cite{wichrowski2025matrix, wichrowski2025geometric}. Aggregated Finite
-Element Methods, merges degrees of freedom in cut cells to ensure stability without explicit penalty
-terms~\cite{badia2018mixed, badia2021aggregated}.
+specialized geometric multigrid preconditioners~\cite{wichrowski2025matrix, wichrowski2025geometric,
+    wichrowski2026sbmMGCG}. Aggregated Finite Element Methods, merges degrees of freedom in cut cells to ensure stability
+without explicit penalty terms~\cite{badia2018mixed, badia2021aggregated}.
 
 This paper presents a matrix-free method for evaluating ghost penalty terms in CutFEM. In
 Subsection~\ref{sec:tensor_product}, which forms the core contribution of this work, we demonstrate how the
@@ -132,8 +132,10 @@ mass and penalty matrices, which can be precomputed and stored. This allows for 
 on-the-fly, avoiding the need for explicit assembly of the global matrix.
 
 Key components developed for this work have been integrated into the main \texttt{deal.II} library and are included in
-the 9.7 release~\cite{dealII97}. This includes the assembly of the 1D ghost penalty stabilization term, the numbering
-of degrees of freedom on two adjacent cells, and support for additional ghost cells in the matrix-free framework.
+the 9.7 release~\cite{dealII97} This includes the assembly of the 1D ghost penalty stabilization term, the numbering of
+degrees of freedom on two adjacent cells, and support for additional ghost cells in the matrix-free
+framework\footnote{The source code used for this paper is available at
+    \url{https://github.com/mwichro/TensorGhostPenalty}}..
 
 We begin by presenting the CutFEM discretization in Section~\ref{sec:cutFEM}, introducing necessary notation and
 concepts. In Section~\ref{sec:numerical_results}, we validate our approach through numerical experiments, demonstrating
@@ -1153,6 +1155,7 @@ performance analysis, while cut cells remain the most expensive component of the
 evaluation contributes only a modest fraction to the overall execution time. Furthermore, the implementation within the
 \texttt{deal.II} library allows further development of the method.
 
+\paragraph*{Code availability:} \url{https://github.com/mwichro/TensorGhostPenalty}
 \section*{Acknowledgments}
 During the preparation of this work, the author used Google Gemini, ChatGPT, and Claude Sonnet in order to improve the
 clarity and readability of the manuscript. After using these tools, the author reviewed and edited the content as
