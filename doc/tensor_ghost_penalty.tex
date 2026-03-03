@@ -119,9 +119,9 @@ Another unfitted approach is the Shifted Boundary Method (SBM)~\cite{main2018shi
 complex quadrature on cut cells by transferring boundary conditions to a surrogate boundary. This simplifies
 implementation while avoiding the need for any stabilization and has been successfully applied to various
 problems~\cite{atallah2021shifted}. Recent developments include high-performance matrix-free implementations and
-specialized geometric multigrid preconditioners~\cite{wichrowski2025matrix, wichrowski2025geometric}. Aggregated Finite
-Element Methods, merges degrees of freedom in cut cells to ensure stability without explicit penalty
-terms~\cite{badia2018mixed, badia2021aggregated}.
+specialized geometric multigrid preconditioners~\cite{wichrowski2025matrix, wichrowski2025geometric,
+    wichrowski2026sbmMGCG}. Aggregated Finite Element Methods, merges degrees of freedom in cut cells to ensure stability
+without explicit penalty terms~\cite{badia2018mixed, badia2021aggregated}.
 
 This paper presents a matrix-free method for evaluating ghost penalty terms in CutFEM. In
 Subsection~\ref{sec:tensor_product}, which forms the core contribution of this work, we demonstrate how the
@@ -132,8 +132,10 @@ mass and penalty matrices, which can be precomputed and stored. This allows for 
 on-the-fly, avoiding the need for explicit assembly of the global matrix.
 
 Key components developed for this work have been integrated into the main \texttt{deal.II} library and are included in
-the 9.7 release~\cite{dealII97}. This includes the assembly of the 1D ghost penalty stabilization term, the numbering
-of degrees of freedom on two adjacent cells, and support for additional ghost cells in the matrix-free framework.
+the 9.7 release~\cite{dealII97} This includes the assembly of the 1D ghost penalty stabilization term, the numbering of
+degrees of freedom on two adjacent cells, and support for additional ghost cells in the matrix-free
+framework\footnote{The source code used for this paper is available at
+    \url{https://github.com/mwichro/TensorGhostPenalty}}..
 
 We begin by presenting the CutFEM discretization in Section~\ref{sec:cutFEM}, introducing necessary notation and
 concepts. In Section~\ref{sec:numerical_results}, we validate our approach through numerical experiments, demonstrating
@@ -459,27 +461,31 @@ operations, leading to a total cost of $(k+1)^{d-1}(2k+1)^2 + 2(k+1)^d(2k+1)$ op
 The treatment of interior cells follows the standard matrix-free approach and is included here for completeness. For
 each cell $K \in \mathcal{T}$, the $i$-th element of the local contribution ${w}_{Ki}$ is computed by
 \begin{equation}
-    w_{Ki}=\int\limits_K  \nabla u_k   \cdot \nabla {\phi }_i \;	\Dd x
-    = \sum_{q(K)}	\nabla u_k   \cdot  \nabla\phi_i \, J(x_q) \,
+    w_{Ki}=\int\limits_K  \chreplaced{\nabla_x}{\nabla} u_k   \cdot \chreplaced{\nabla_x}{\nabla} {\phi }_i \;	\Dd x
+    = \sum_{q(K)}	\chreplaced{\nabla_x}{\nabla} u_k   \cdot  \chreplaced{\nabla_x}{\nabla}\phi_i \, J(x_q) \,
     \omega_q.
 \end{equation}
 where $\phi_i$ is the $i$-th function of the local basis. The sum is taken over the $q(K)$ quadrature points $x_q$,
 with $J(x_q)$ being the Jacobian determinant
-at  $q$th quadrature point, and $\omega_q$ the quadrature weight.
+at  $q$th quadrature point, and $\omega_q$ the quadrature weight. \chadded{Here and throughout the paper, we use $\nabla_x$ to denote the gradient with respect to the physical coordinates $x$, whereas $\nabla_\xi$ denotes the gradient with respect to the coordinates $\xi$ of the reference cell.}
 
 The evaluation of this term is split into three stages. First, the \textit{evaluation} step: for each quadrature point
-$x_q$, we compute the gradient of the solution $\nabla u_K(x_q)$ and store it. Next, in the \textit{quadrature loop}
-step, we prepare the data for integration by queuing the computed gradients $\nabla u_K(x_q)$. Finally, in the
+$x_q$, \chadded{we compute the gradient of the solution in reference coordinates $\chreplaced{\nabla_\xi}{\nabla}
+        u_K(x_q)$, transform it to the physical coordinates using the inverse-transpose of the Jacobian matrix $\bfm{J}^{-T}$
+    to obtain ${\nabla_x} u_K(x_q)$,} and store it. Next, in the \textit{quadrature loop} step, we prepare the data for
+integration by queuing the computed gradients $\chreplaced{\nabla_x}{\nabla} u_K(x_q)$. Finally, in the
 \textit{integration} step, we compute the local contributions $w_{Ki}$ by performing the integration, which involves
-contracting the stored gradients with test function gradients $\nabla\phi_i(x_q)$, Jacobian determinants $J(x_q)$, and
-quadrature weights $\omega_q$. Both stages are performed efficiently using sum factorization, where the integration
-step corresponds to the transpose of the evaluation operation~\cite{kopriva2009spectral, deville2002high}.
+contracting the stored gradients with test function gradients $\chreplaced{\nabla_x}{\nabla}\phi_i(x_q)=
+    \chadded{\bfm{J}^{-T} \nabla_\xi \phi_i(x_q) }$, Jacobian determinants $J(x_q)$, and quadrature weights $\omega_q$.
+Both stages are performed efficiently using sum factorization, where the integration step corresponds to the transpose
+of the evaluation operation~\cite{kopriva2009spectral, deville2002high}.
 
 Matrix-free methods typically use sum factorization~\cite{kronbichler2019fast,fischer2020scalability} to bring down the
-cost of evaluating gradients \( \nabla u_K( {x}_q) \) at quadrature points. For integration, we use a tensor-product
-quadrature formula where points are indexed with a multi-index \( (q_1, q_2, q_3 )\) and each quadrature point \( x_{q}
-= (x_{q_1}, x_{q_2}, x_{q_3} ) \) is represented by a vector of corresponding points of the one-dimensional quadrature
-formula. For a finite element of degree $k$, we use $(k+1)$ quadrature points in each direction.
+cost of evaluating gradients \( \chreplaced{\nabla_x}{\nabla} u_K( {x}_q) \) at quadrature points. For integration, we
+use a tensor-product quadrature formula where points are indexed with a multi-index \( (q_1, q_2, q_3 )\) and each
+quadrature point \( x_{q} = (x_{q_1}, x_{q_2}, x_{q_3} ) \) is represented by a vector of corresponding points of the
+one-dimensional quadrature formula. For a finite element of degree $k$, we use $(k+1)$ quadrature points in each
+direction.
 
 We define the matrix \(\bm{[}\phi_i(x_{q_j})\bm{]} \), which contains the values of the 1D shape functions \( \phi_i \)
 at the 1D quadrature point \( x_{q_j} \). A straightforward calculation shows that the set of function values at
@@ -525,8 +531,8 @@ weights adapted to the actual geometry of the intersection. For each intersected
 The computation of the local contribution follows the same general pattern as for interior cells, but with
 modifications to account for the cut geometry. The weak form of the equation is approximated as
 \begin{equation}
-    w_{Ki}=\int\limits_{K \cap \Omega}	\nabla u_K   \cdot \nabla {\phi }_i \;	\Dd x
-    \approx \sum_{q(K \cap \Omega)}	\nabla u_K   \cdot  \nabla\phi_i \, J(x_q) \, \omega_q.
+    w_{Ki}=\int\limits_{K \cap \Omega}	\chreplaced{\nabla_x}{\nabla} u_K   \cdot \chreplaced{\nabla_x}{\nabla} {\phi }_i \;	\Dd x
+    \approx \sum_{q(K \cap \Omega)}	\chreplaced{\nabla_x}{\nabla} u_K   \cdot  \chreplaced{\nabla_x}{\nabla}\phi_i \, J(x_q) \, \omega_q.
 \end{equation}
 
 The evaluation of the local contribution proceeds in several steps, ordered to optimize memory access by reading the
@@ -536,7 +542,7 @@ degrees of freedom for a cell only once.
           inside the
           domain:
           \begin{align}
-              \nabla	 u_K(x_I) & = \sum_i u_{K,i} \bfm{J}(x_I)^{-T}	\nabla \phi_i(x_I).
+              \chreplaced{\nabla_x}{\nabla} u_K(x_I) & = \sum_i u_{K,i} \bfm{J}(x_I)^{-T}	\chreplaced{\nabla_\xi}{\nabla} \phi_i(x_I).
           \end{align}
           Note: the mapping of gradients from the reference cell to the physical cell uses the
           inverse-transpose
@@ -546,13 +552,13 @@ degrees of freedom for a cell only once.
     \item \textbf{Evaluation of Gradients and Values at the Boundary:} Evaluate the solution values at each
           quadrature point $ x_S$ at the boundary:
           \begin{align}
-              u_K(x_S)          & = \sum_i u_{K,i}  \phi_i(x_S)                          \\
-              \nabla   u_K(x_S) & = \sum_i u_{K,i} \bfm{J}^{-1}(x_S)	\nabla \phi_i(x_S).
+              u_K(x_S)                               & = \sum_i u_{K,i}  \phi_i(x_S)                                                   \\
+              \chreplaced{\nabla_x}{\nabla} u_K(x_S) & = \sum_i u_{K,i} \bfm{J}^{-T}(x_S)	\chreplaced{\nabla_\xi}{\nabla} \phi_i(x_S).
           \end{align}
     \item \textbf{Integration inside the cell:} Integrate using the precomputed weights specific to the part of the
           cell inside the domain:
           \begin{equation}
-              w^{\Omega}_{Ki} = \sum_{q(K \cap \Omega)} \nabla u_K(x_q) \cdot \nabla\phi_i(x_q) \cdot J(x_q) \cdot
+              w^{\Omega}_{Ki} = \sum_{q(K \cap \Omega)} \chreplaced{\nabla_x}{\nabla} u_K(x_q) \cdot \chreplaced{\nabla_x}{\nabla}\phi_i(x_q) \cdot J(x_q) \cdot
               \omega_q.
           \end{equation}
 
@@ -600,28 +606,30 @@ ordering across two neighboring cells. To achieve this, we copy the values of lo
 into a single array with the desired ordering. Then the operator is applied to the combined array, and the results are
 scattered back to the local arrays.
 
-For load balancing we use a similar strategy to~\cite{bergbauer2024high} where to each cell a weight is assigned. For
-cells outside the domain the weight is zero, for cells strictly inside the domain the weight is one, and for
-intersected cells the weight is $k^{d-1}$. This estimate comes from the comparison of complexity of evalution in
-interior cells and intersected cells. The cells are then redistributed among the processors in such a way that the sum
-of the weights is equal for each processor.
+\chadded{To ensure efficient utilization of parallel hardware, we use distributed computing via MPI through
+    infrastructure implemented in \texttt{deal.II}. The cells are partitioned and distributed among the processors, and
+    the operator is applied in parallel. For load balancing, we use a similar strategy to~\cite{bergbauer2024high} where
+    to each cell a weight is assigned. For cells outside the domain the weight is zero, for cells strictly inside the
+    domain the weight is one, and for intersected cells the weight is $k^{d-1}$. This estimate comes from the comparison
+    of complexity of evaluation in interior cells and intersected cells. The cells are then redistributed among the
+    processors (MPI ranks) in such a way that the sum of the weights is balanced across the partition.}
 
 The ghost penalty operator is applied in a separate loop over the relevant faces, which are grouped into vectorization
 batches based on their normal direction. In the parallel setting, faces shared between MPI ranks are processed by the
 rank with the lowest ID to avoid redundant computations. This simple rule can lead to a slight load imbalance, but its
 impact is limited since the ghost penalty evaluation constitutes a relatively small fraction of the total computational
-cost, as shown in Figure~\ref{fig:vmult_time_breakdown}. Further optimizations, such as fusing the face loop with the
-cell loop to reduce memory transfers, were considered but not implemented due to their complexity and the diminishing
-returns as the mesh is refined and the fraction of stabilized faces decreases.
+cost, as shown in Figure~\ref{fig:vmult_time_breakdown}.
 
-% \paragraph{Parallelization}
-We use the distributed computing via MPI through infrastructure implemented in \texttt{deal.II}. The cells are
-distributed among the processors and the operator is applied in parallel. The communication between the processors is
-minimized by using the ghosted vectors, which store the values of the solution on the neighboring cells. The values of
-the solution on the ghost cells are updated after each application of the operator. The main difference between
-application of the operator considered in this work and the standard matrix-free approach is that the ghost penalty
-operator is applied to the faces. This requires extending the data structures inside matrix-free infrastructure to
-store information about the ghost cell.
+\chadded{The communication between the processors is minimized
+    by using ghosted vectors, which store the values of the solution on the neighboring cells. The values of the solution
+    on the ghost cells are updated after each application of the operator. The main difference between the application of
+    the operator considered in this work and the standard matrix-free approach is that the ghost penalty operator is
+    applied to the faces. This requires extending the data structures inside the matrix-free infrastructure to store
+    information about the ghost cells.}
+
+Further optimizations, such as fusing the face loop with the cell loop down to the level of memory transfers, were
+considered but not implemented due to their complexity and the diminishing returns as the mesh is refined and the
+fraction of stabilized faces decreases.
 
 \begin{algorithm}[!ht]
     \SetKwInOut{Input}{Given}
@@ -634,17 +642,19 @@ store information about the ghost cell.
     \ForEach{element $K \in \Omega^h$, $K \cap \Omega \neq \emptyset$  }{
         \If{$K\subset \Omega $	\tcp*{Handle as interior cell}	}{
 
-            Gather element-local vector values\\ Evaluate gradients at each quadrature point: \\ \Indp \tcp*{Sum factorization}
-            \Indm \ForEach{quadrature point $q$ on $K$ }{ Queue $\nabla u_q$ for integration\; } Integrate queued gradients: \\
-            \Indp $w_{Ki} \leftarrow \sum_q \nabla {\phi}_i(x_q) \cdot \bfm{J}^{-T}(x_q) \nabla {u}_K(x_q) \, \, \omega_q$
-            \tcp*{Sum factorization} \Indm Scatter results to ${w}$\\
+            Gather element-local vector values\\ Evaluate gradients at each quadrature point \chadded{$x_q$}: \\ \Indp\chadded{
+                $\nabla u_q$}\tcp*{Sum factorization} \Indm \ForEach{quadrature point $q$ on $K$ }{ Queue
+                $\chreplaced{\nabla_x}{\nabla} u_q$ for integration\; } Integrate queued gradients: \\ \Indp $w_{Ki} \leftarrow \sum_q
+                \chreplaced{\nabla_\xi}{\nabla} {\phi}_i(x_q) \cdot \bfm{J}^{-T}(x_q) \chreplaced{\nabla_x}{\nabla} {u}_K(x_q) \, \,
+                \omega_q$ \tcp*{Sum factorization} \Indm Scatter results to ${w}$\\
 
         }
 
         \ElseIf{$K \cap \partial \Omega^h \neq 0$  \tcp*{Handle as intersected cell} }{
             Gather element-local vector
 
-            Evaluate gradients and values at surface quadrature point: \\ \Indp $\nabla {u}_{K}(x_S) \qquad {u}_{K} (x_S) $\\ \Indm
+            Evaluate gradients and values at surface quadrature point: \\ \Indp $\chreplaced{\nabla_x}{\nabla} {u}_{K}(x_S) \qquad
+                {u}_{K} (x_S) $\\ \Indm
 
             \ForEach{quadrature point $q$ inside  $\Omega$	}{
                 Queue $u(x_S)$	and   $ \frac{\partial u}{\partial n}(x_S)	+ \frac{\gamma_D}{h}
@@ -652,19 +662,20 @@ store information about the ghost cell.
             }
             Integrate queued gradients:\\
             \Indp
-            $w_{Ki} \leftarrow \sum_ {x_S}\nabla {\phi}_i(x_S) \cdot  \bfm{J}^{-T}(x_S) \nabla
+            $w_{Ki} \leftarrow \sum_ {x_S}\chreplaced{\nabla_\xi}{\nabla} {\phi}_i(x_S) \cdot  \bfm{J}^{-T}(x_S) \chreplaced{\nabla_x}{\nabla}
                 {u}_K(x_S) \,
                 \, \omega(x_S) $
             \\
             \Indm
 
-            Evaluate gradients at each quadrature point inside the domain: \\ \Indp $\nabla {u}_{K}(x_I) $\\ \Indm
-            \ForEach{quadrature point $q$ on $\partial \Omega$ }{ Queue $\nabla u_q$ for integration \\ } Integrate queued
-            gradients: \\ \Indp $w_{Ki} \stackrel{+}{\leftarrow} \sum_q \nabla {\phi}_i(x_q) \cdot \bfm{J}^{-T}(x_q) \nabla
-                {u}_K(x_q) \, \, \omega_q$ \\ \Indm Scatter results to ${w}$\\ } } \ForEach{face $F \in \mathcal{F}_h^h$ \tcp*{Apply
-            ghost penalty} }{ Gather face-local vector values on this face $u_F$\\ Evaluate local ghost penalty operator: \\ \Indp
-        \(w_F \leftarrow \mathcal{G}_F u_F \) \\ \Indm Scatter results to ${w}$\\ } Import contributions $w$ \tcp*{Parallel
-        communication} \caption{Matrix-free application of the CutFEM operator} \label{alg:mf_generic}
+            Evaluate gradients at each quadrature point inside the domain: \\ \Indp $\chreplaced{\nabla_x}{\nabla} {u}_{K}(x_I) $\\
+            \Indm \ForEach{quadrature point $q$ on $\partial \Omega$ }{ Queue $\chreplaced{\nabla_x}{\nabla} u_q$ for integration
+                \\ } Integrate queued gradients: \\ \Indp $w_{Ki} \stackrel{+}{\leftarrow} \sum_q \chreplaced{\nabla_\xi}{\nabla}
+                {\phi}_i(x_q) \cdot \bfm{J}^{-T}(x_q) \chreplaced{\nabla_x}{\nabla} {u}_K(x_q) \, \, \omega_q$ \\ \Indm Scatter results
+            to ${w}$\\ } } \ForEach{face $F \in \mathcal{F}_h^h$ \tcp*{Apply ghost penalty} }{ Gather face-local vector values on
+        this face $u_F$\\ Evaluate local ghost penalty operator: \\ \Indp \(w_F \leftarrow \mathcal{G}_F u_F \) \\ \Indm
+        Scatter results to ${w}$\\ } Import contributions $w$ \tcp*{Parallel communication} \caption{Matrix-free application of
+        the CutFEM operator} \label{alg:mf_generic}
 \end{algorithm}
 
 \section{Results}
@@ -1146,6 +1157,7 @@ performance analysis, while cut cells remain the most expensive component of the
 evaluation contributes only a modest fraction to the overall execution time. Furthermore, the implementation within the
 \texttt{deal.II} library allows further development of the method.
 
+\paragraph*{Code availability:} \url{https://github.com/mwichro/TensorGhostPenalty}
 \section*{Acknowledgments}
 During the preparation of this work, the author used Google Gemini, ChatGPT, and Claude Sonnet in order to improve the
 clarity and readability of the manuscript. After using these tools, the author reviewed and edited the content as
