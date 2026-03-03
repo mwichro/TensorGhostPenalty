@@ -638,11 +638,11 @@ store information about the ghost cell.
     \ForEach{element $K \in \Omega^h$, $K \cap \Omega \neq \emptyset$  }{
         \If{$K\subset \Omega $	\tcp*{Handle as interior cell}	}{
 
-            Gather element-local vector values\\ Evaluate gradients at each quadrature point: \\ \Indp \tcp*{Sum factorization}
-            \Indm \ForEach{quadrature point $q$ on $K$ }{ Queue $\chreplaced{\nabla_x}{\nabla} u_q$ for integration\; } Integrate
-            queued gradients: \\ \Indp $w_{Ki} \leftarrow \sum_q \chreplaced{\nabla_\xi}{\nabla} {\phi}_i(x_q) \cdot
-                \bfm{J}^{-T}(x_q) \chreplaced{\nabla_x}{\nabla} {u}_K(x_q) \, \, \omega_q$ \tcp*{Sum factorization} \Indm Scatter
-            results to ${w}$\\
+            Gather element-local vector values\\ Evaluate gradients at each quadrature point \chadded{$x_q$}: \\ \Indp\chadded{
+                $\nabla u_q$}\tcp*{Sum factorization} \Indm \ForEach{quadrature point $q$ on $K$ }{ Queue
+                $\chreplaced{\nabla_x}{\nabla} u_q$ for integration\; } Integrate queued gradients: \\ \Indp $w_{Ki} \leftarrow \sum_q
+                \chreplaced{\nabla_\xi}{\nabla} {\phi}_i(x_q) \cdot \bfm{J}^{-T}(x_q) \chreplaced{\nabla_x}{\nabla} {u}_K(x_q) \, \,
+                \omega_q$ \tcp*{Sum factorization} \Indm Scatter results to ${w}$\\
 
         }
 
